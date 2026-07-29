@@ -1,0 +1,28 @@
+{
+  "_comment": [
+    "A semlegessegi kapu szokeszlete. Kategoriankent, hogy a hibauzenet meg tudja",
+    "mondani, MIERT tilos egy szo.",
+    "",
+    "MI NEM TILOS, es miert: a semleges platform-nevter nem szivargas -- minden",
+    "termeknek van gyartoja. A semlegesseg azt jelenti, hogy a csomag nem hordozza",
+    "egyetlen IPARAG szotarat es egyetlen UGYFEL nevet sem.",
+    "",
+    "UGYFELNEVEK IDE NEM KERULNEK. Azok telepitesenkent mas, es egy publikus",
+    "repoban ugyfel-kapcsolatot fednenek fel. Bovitsd a `neutrality.local.json`",
+    "fajlban (gitignore-olt), ha a sajat telepitesedben kell."
+  ],
+  "forbidden": {
+    "iparagi marka": [
+      "joinerytech",
+      "joinery/tech"
+    ],
+    "iparagi szotar": [
+      "ajtó", "ajto", "falpanel", "bútorfront", "butorfront", "asztalos",
+      "szabász", "szabasz", "élléc", "ellec", "bútorlap", "butorlap",
+      "furniture", "joinery", "cabinet", "woodworking"
+    ],
+    "cel-rendszer": [
+      "sap", "navision", "dynamics"
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+dist/
+build/
+*.egg-info/
+
+# Uzleti binaris SOSEM kerul a repoba (bizonyitek-lanc: relativ ut + hash)
+input/
+samples/
+*.pdf
+*.xlsx
+*.xlsm
+*.jpg
+*.png
+tools/neutrality.local.json

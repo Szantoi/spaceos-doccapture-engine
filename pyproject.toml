@@ -1,0 +1,8 @@
+[project]
+name = "doccapture-engine"
+version = "0.1.0"
+description = "Iparag-agnosztikus dokumentum-befogado motor"
+requires-python = ">=3.11"
+
+[tool.setuptools.packages.find]
+where = ["src"]

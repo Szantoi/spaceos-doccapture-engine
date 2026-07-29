@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # A semlegessegi kapu ELOL fut: ha markanev vagy iparagi szo kerult a
+      # csomagba, azt olcsobb itt megtudni, mint a fogyasztonal. A csomag akkor
+      # eladhato, ha barmely iparagban hasznalhato.
+      - name: Semlegessegi kapu
+        run: python tools/neutrality_guard.py
+
+      - name: Tesztek
+        env:
+          PYTHONPATH: src
+        run: python -m unittest discover -s tests -v
