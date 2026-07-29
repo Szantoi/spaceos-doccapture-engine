@@ -86,6 +86,9 @@ használható — és a semlegességet gépi kapunak kell mérnie, nem figyelemn
 
 ## Állapot
 
-**Váz.** A `tartalom_mentes` prototípus (hexagonális mag, 46 teszt-fájl) ebbe a
-repóba általánosítandó; a `Bevetelezes` tapasztalatai **mintaként** épülnek be
-(M1-M15, ld. a platform `terminals/doccapture/CLAUDE.md`-jét), nem receptként.
+**Váz.** A domain-modell és a semlegességi kapu áll; a feldolgozó fázisok
+következnek.
+
+A motor korábbi, éles használatban kiforrott megoldásokból általánosít. Az
+átemelés elve: **mintaként, nem receptként** — ami egy konkrét rendszerre vagy
+egy konkrét cégre volt szabva, az itt **konfigurációvá** válik.

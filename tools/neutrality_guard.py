@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Semlegessegi kapu — a csomag akkor eladhato, ha barmely iparagban hasznalhato.
 
-Miert gepi kapu es nem review-figyelem: egy korabbi portal-csomagunkban begetve
-maradt a sajat szovedjegy, es ezt a fogyaszto tolunk fuggetlenul szinten
-kifogasolta. A semlegesseget merni kell, nem figyelni.
+Miert gepi kapu es nem review-figyelem: a markanev es az iparagi szo eszrevetlenul
+bennmarad, mert olvasaskor termeszetesnek tunik -- eppen az szurodik at, ami a
+szerzonek magatol ertetodo. A semlegesseget merni kell, nem figyelni.
 
 A kapu a FORRAST nezi, nem a viselkedest: a markanev akkor is hiba, ha eppen
 semmi nem hivatkozik ra.
