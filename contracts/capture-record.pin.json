@@ -1,0 +1,14 @@
+{
+  "_comment": [
+    "A publikalt Capture-kontraktus hash-pinje. GENERALT fajl:",
+    "`python tools/contract_pin.py --write`.",
+    "",
+    "A 'hashed_input' NEM diszites: egy hash onmagaban nem azonosit semmit,",
+    "ha nem tudjuk, mi volt a bemenete. Enelkul egy kesobbi ellenorzo nem",
+    "tudja, mit kellene ujraszamolnia."
+  ],
+  "contract_version": "1.0.0",
+  "schema_file": "capture-record.schema.json",
+  "hashed_input": "a contracts/capture-record.schema.json fajl bajtjai",
+  "digest": "sha256:6f2aef82323ce6d3ed1e18883f0c395a1baa133c19caf757c2bf4e7ed1bb2145"
+}

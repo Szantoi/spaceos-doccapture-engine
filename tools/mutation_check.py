@@ -61,8 +61,25 @@ def apply_mutation(entry: dict) -> tuple[str, str]:
     if not path.is_file():
         return "ERVENYTELEN", f"a fajl nem letezik: {entry['file']}"
 
-    original = path.read_text(encoding="utf-8")
-    if entry["find"] not in original:
+    # ⚠ AZ ILLESZTES SZOVEGEN, A VISSZAALLITAS BAJTON — es ez a szetvalasztas
+    # ket kulon, MEGTORTENT hiba kovetkezmenye:
+    #
+    # 1. Eloszor `read_text`/`write_text` part hasznaltunk. Windowson az
+    #    `\n` -> `\r\n`-t fordit, tehat a visszaallitas szoveg-azonos volt, de NEM
+    #    bajt-azonos -- es ez egy vendorolt, HASH-PINNELT szerzodes-fajlt elrontott.
+    #    A pin-kapu fogta meg.
+    # 2. Ezert bajt-szintre valtottunk -- amitol harom tobbsoros mutacios pont
+    #    ERVENYTELEN lett: a keszletben LF all, a forrasfajlokban CRLF, tehat a
+    #    bajt-illesztes nem talalt. A mutacio-keszlet igy CSENDBEN szukult volna,
+    #    ha az eszkoz nem mondana ki az ERVENYTELEN meresset.
+    #
+    # A helyes valasz mindkettore: sorveg-fuggetlenul illesztunk (szoveg,
+    # normalizalt sorvegekkel), de a visszaallitashoz az EREDETI BAJTOKAT tartjuk
+    # meg. A mutalt allapot sorvegei nem erdekesek -- az atmeneti.
+    original_bytes = path.read_bytes()
+    text = original_bytes.decode("utf-8").replace("\r\n", "\n")
+
+    if entry["find"] not in text:
         # NEM "sikeres": ha a mutacios pont elmozdult (atirtuk a kodot), a meres
         # semmit nem allit. Ez a leggyakoribb csendes hiba egy mutacios keszletben.
         return "ERVENYTELEN", "a mutacios pont nem talalhato (elmozdult a kod?)"
@@ -70,12 +87,13 @@ def apply_mutation(entry: dict) -> tuple[str, str]:
     if not run_test(entry["test"]):
         return "ERVENYTELEN", f"az alapallapot mar piros: {entry['test']}"
 
-    path.write_text(original.replace(entry["find"], entry["replace"], 1), encoding="utf-8")
+    path.write_bytes(text.replace(entry["find"], entry["replace"], 1).encode("utf-8"))
     try:
         failed = not run_test(entry["test"])
     finally:
         # `finally`, hogy egy megszakitas (Ctrl-C, timeout) se hagyjon mutalt kodot.
-        path.write_text(original, encoding="utf-8")
+        # `write_bytes` az EREDETI bajtokkal: a visszaallitas bajtra azonos.
+        path.write_bytes(original_bytes)
 
     return ("FOG", "a kapu elbuktatta a mutaciot") if failed else (
         "NEM FOG",

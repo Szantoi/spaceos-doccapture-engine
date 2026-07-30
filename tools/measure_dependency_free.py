@@ -49,6 +49,8 @@ DEPENDENCY_FREE_MODULES = (
     "tests.test_document_detect",
     "tests.test_document_consistency",
     "tests.test_analyze_document",
+    "tests.test_contract",
+    "tests.test_measurement_completeness",
 )
 
 DEFAULT_BLOCKED = ("openpyxl",)

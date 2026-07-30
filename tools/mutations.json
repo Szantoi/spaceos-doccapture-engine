@@ -92,6 +92,30 @@
       "find": "        if delta > tolerance:",
       "replace": "        if False:  # MUTACIO",
       "test": "tests.test_document_consistency"
+    },
+    {
+      "name": "kontraktus: uj wire-mezo a semaban valo bejegyzes NELKUL",
+      "asserts": "a hash a WIRE-TARTALMAT fedi -- egy sema nelkuli mezo elbukik",
+      "file": "src/doccapture/infrastructure/wire.py",
+      "find": "        \"needs_human\": record.needs_human,",
+      "replace": "        \"needs_human\": record.needs_human,\n        \"nem_dokumentalt\": \"MUTACIO\",",
+      "test": "tests.test_contract"
+    },
+    {
+      "name": "kontraktus: a megbizhatosag NEM megy ki a wire-ra",
+      "asserts": "a szarmaztatott needs_human premisszaja merve van (ujraszamolhato)",
+      "file": "src/doccapture/infrastructure/wire.py",
+      "find": "        \"confidence\": item.confidence.value,",
+      "replace": "        \"confidence\": \"confirmed\",  # MUTACIO",
+      "test": "tests.test_contract"
+    },
+    {
+      "name": "kontraktus: a logikai ertek szamkent megy ki",
+      "asserts": "a bool-int csapda merve van (True nem lehet 1 a wire-on)",
+      "file": "src/doccapture/infrastructure/wire.py",
+      "find": "    if isinstance(value, bool):\n        return value, \"boolean\"",
+      "replace": "    if False:  # MUTACIO\n        return value, \"boolean\"",
+      "test": "tests.test_contract"
     }
   ],
   "not_covered": [
@@ -100,6 +124,7 @@
     "max_rows csonkolas-jelzes",
     "a bizonyitek-lanc hash-elese es a fajlonkenti egyszeri hasheles",
     "a mertekegyseg fejlecbol kinyerese (unit:<kulcs> mezo)",
-    "a semlegessegi kapu szokeszlete (annak sajat onteszte van)"
+    "a semlegessegi kapu szokeszlete (annak sajat onteszte van)",
+    "a kereszt-repo szerzodes-drift (CI-lepes, a motor publikalasat igenyli)"
   ]
 }

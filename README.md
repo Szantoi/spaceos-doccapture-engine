@@ -139,6 +139,39 @@ motorban azt jelentené, hogy a termék egyetlen iparágban használható.
 
 Tervezési szándék: [`docs/DESIGN-DC-06-dokumentum-profilok.md`](docs/DESIGN-DC-06-dokumentum-profilok.md).
 
+## A publikált szerződés (DC-02)
+
+A motor kimenete **hash-pinnelt szerződés** mögött áll, hogy a fogyasztó
+**a motor belsejéről ne tudjon** — és hogy a motor **cserélhető** legyen.
+
+| Műveltár | Mi |
+|---|---|
+| `contracts/capture-record.schema.json` | a szerződés — **forrás-igazság**, nem melléktermék |
+| `contracts/capture-record.pin.json` | SHA-256 pin, és **kimondja, mit hasheltünk** |
+| `contracts/samples/*.json` | **aranypéldány a motor VALÓDI kimenetéből** |
+
+⚠ **Ez ADAT-szerződés, nem HTTP-API.** A motor könyvtár és eszköz; futhat
+in-process, soron át, vagy később HTTP mögött — **a szállítás cserélhető, az alak
+nem.** Egy HTTP-API feltételezné a telepítési alakot, amit szándékosan
+konfigurációnak hagytunk.
+
+**A hash a wire-tartalmat fedi, és ezt három kapu méri** (`tests/test_contract.py`):
+minden előállított mező szerepel a sémában · minden sémában deklarált mező elő is
+áll · és a **származtatott** `needs_human` premisszáját **újraszámoljuk a
+wire-ból**, mert egy nem ellenőrzött premissza mellett a hash arra a mezőre
+megszűnne identitás lenni.
+
+```
+python tools/contract_pin.py            # ellenorzes (CI-ben ez fut)
+python tools/contract_pin.py --write    # ujraszamitas -- a verzio-emeles KIMONDOTT lepes
+```
+
+⚠ **A szerződés-fájlok sorvégei nem fordulhatnak át** (`.gitattributes`:
+`contracts/** -text`). A pin **bájt-szintű**, tehát egy `LF → CRLF` fordítás
+elbuktatja — olyan hibával, aminek a forrása nem is a repóban van, hanem a
+fejlesztő `core.autocrlf` beállításában. Külön kapu mondja ki ezt az okot, mert a
+puszta pin-bukás félrevezetne.
+
 ## Elvek
 
 **[`docs/PRINCIPLES.md`](docs/PRINCIPLES.md)** — 15 elv, éles üzemben megvett

@@ -20,6 +20,13 @@ jobs:
       - name: Semlegessegi kapu
         run: python tools/neutrality_guard.py
 
+      # A PUBLIKALT szerzodes hash-pinje. Ha a sema valtozik es a pin nem, ez
+      # elbukik -- a verzio-emeles KIMONDOTT lepes, nem mellekhatas. A kapu azt is
+      # ellenorzi, hogy a HAROM helyen allo verzio (sema $id, pin, szerializalo)
+      # ugyanazt mondja: harom igazsag ugyanarrol elobb-utobb elcsuszna.
+      - name: Kontraktus hash-pin
+        run: python tools/contract_pin.py
+
       # ------------------------------------------------------------------
       # 1. kor: FUGGOSEG NELKUL
       #

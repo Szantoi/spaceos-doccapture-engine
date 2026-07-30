@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spaceos.dev/contracts/doccapture/capture-record/1.0.0",
+  "title": "CaptureRecord",
+  "description": "A dokumentum-befogado motor kimenetenek PUBLIKALT wire-alakja. Ez a fajl FORRAS-IGAZSAG, nem generalt mellektermek. A motor cserelheto, amig ezt az alakot adja. Nem HTTP-API: adat-szerzodes, tehat in-process, soron es HTTP mogott is ugyanez.",
+
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "input_kind", "evidence", "fields", "rows", "diagnostics", "needs_human"],
+
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "A szerzodes verzioja. A fogyaszto a FO verziot ellenorzi: ismeretlen fo verzio eseten el kell bukni, mert a toro valtozas kulonben csendben tevas adatot ad. Additiv bovitesnel a kozepso szam no."
+    },
+
+    "input_kind": {
+      "type": "string",
+      "enum": ["tabular", "text_layer_document", "raster_scan", "handwriting"],
+      "description": "A negy bemeneti ut melyikén jott. A fogyasztonak MAS a bizalma egy tablazathoz es egy keziras-atirathoz, ezert ez nem elhagyhato."
+    },
+
+    "evidence": {
+      "$ref": "#/$defs/evidence",
+      "description": "A fajl-szintu bizonyitek. Minden kinyert ertek EHHEZ vezet vissza."
+    },
+
+    "fields": {
+      "type": "object",
+      "description": "Sor-szinten nem ertelmezett adatok: belso kulcs -> ertek. A kulcs a fogyaszto sajat kulcsa, nem a forras cimkeje.",
+      "additionalProperties": { "$ref": "#/$defs/extracted" }
+    },
+
+    "rows": {
+      "type": "array",
+      "description": "Tetel-sorok. Minden sor: belso kulcs -> ertek.",
+      "items": {
+        "type": "object",
+        "additionalProperties": { "$ref": "#/$defs/extracted" }
+      }
+    },
+
+    "diagnostics": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Amit a motor eszrevett, de NEM javitott. Ember szamara olvashato. Ures lista azt jelenti, hogy nem vettunk eszre semmit -- NEM azt, hogy nincs mit eszrevenni."
+    },
+
+    "needs_human": {
+      "type": "boolean",
+      "description": "SZARMAZTATOTT kenyelmi mezo: igaz, ha barmely ertek nem 'confirmed'. Nem atlagolunk -- egyetlen bizonytalan ertek is igazza teszi. A premisszaja (minden bemenete a wire-on van) MERVE van, nem feltetelezve."
+    }
+  },
+
+  "$defs": {
+    "confidence": {
+      "type": "string",
+      "enum": ["confirmed", "needs_review", "missing"],
+      "description": "confirmed = ellenorzott vagy redundanciaval megerositett. needs_review = kiolvastuk, de valami gyanus. missing = NEM tudtuk kiolvasni; ez nem hiba-allapot, hanem a helyes valasz, amikor nem tudjuk. A tippeles a hiba."
+    },
+
+    "value_type": {
+      "type": ["string", "null"],
+      "enum": ["text", "number", "integer", "boolean", "date", null],
+      "description": "Milyen alakban utazik az ertek a JSON-ban. A datum ISO-8601 SZTRINGKENT utazik: platform-oldali konyvtar-valasztas nem kerul a wire-ra. ⚠ 'missing' megbizhatosagnal nincs ertek, tehat a tipus sem levezetheto -> null. A szandekolt tipust a fogyaszto a sajat semajabol tudja, nem innen."
+    },
+
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relative_path", "content_hash"],
+      "properties": {
+        "relative_path": {
+          "type": "string",
+          "description": "A forrasfajl utvonala a bemeneti gyokerhez kepest. ABSZOLUT UT SOHA: az felfedi a gepi konyvtarszerkezetet, es a bizonyitek atvihetetlen lenne egy masik telepitesre."
+        },
+        "content_hash": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+:[0-9a-f]+$",
+          "description": "'<algoritmus>:<hex>'. Az algoritmus-eloag nem diszites: ha egyszer hasht valtunk, egy eloag nelkuli regi ertek ugy nezne ki, mint egy MEGVALTOZOTT forras."
+        },
+        "locator": {
+          "type": ["string", "null"],
+          "description": "Hely a forrason belul (lap, sor, cella). Nem kotelezo: fajl-szintu bizonyiteknal nincs."
+        }
+      }
+    },
+
+    "extracted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "confidence", "value_type"],
+      "properties": {
+        "value": {
+          "type": ["string", "number", "integer", "boolean", "null"],
+          "description": "Az ertek. 'missing' megbizhatosagnal MINDIG null -- es null ertek mellett a megbizhatosag CSAK 'missing' lehet. Ezt a ket invarianst a motor kikenyszeriti: ertek nelkuli allitas nem lehet megerositett, es megerositett allitas nem lehet ertek nelkul."
+        },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "value_type": { "$ref": "#/$defs/value_type" },
+        "note": {
+          "type": ["string", "null"],
+          "description": "Miert nem 'confirmed' -- ember szamara olvashato indok. Szarmaztatott erteknel a szarmaztatas UTJA is itt all."
+        },
+        "evidence": {
+          "oneOf": [{ "$ref": "#/$defs/evidence" }, { "type": "null" }],
+          "description": "Cella-szintu bizonyitek. A HIANY is adat, tehat annak IS van bizonyiteka."
+        }
+      }
+    }
+  }
+}

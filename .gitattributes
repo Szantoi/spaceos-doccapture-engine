@@ -1,0 +1,16 @@
+# A HASH-PINNELT szerzodes-fajlok sorvegei NEM fordulhatnak at.
+#
+# ⚠ Ezt egy VALODI bukas hozta elo, es a kar tartos volt: a `core.autocrlf=true`
+# beallitasu gepeken a git a klonozasnal LF -> CRLF-re fordit, amitol a fajl
+# BAJTJAI megvaltoznak -- es a hash-pin ELBUKIK, pedig a tartalom valtozatlan.
+# A hiba forrasa igy nem is a repoban lenne, hanem a fejleszto gepenek
+# beallitasaban, tehat ordoggel jaro nyomozas nelkul kideriteni is nehez.
+#
+# A `-text` azt jelenti: a git NEM nyul a sorvegekhez, se be-, se kifele.
+# A pin bajt-szintu, tehat ez nem stilus-kerdes, hanem a mereset teszi
+# reprodukalhatova platformok kozott.
+contracts/** -text
+
+# Ugyanez a JSON-adatra, ami hasheles ala eshet (profil-leirasok, aranypeldanyok).
+*.schema.json -text
+*.pin.json -text
