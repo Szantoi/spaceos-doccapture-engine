@@ -25,11 +25,14 @@ from typing import Optional
 
 from doccapture.core.config import CaptureConfig
 from doccapture.core.errors import SourceUnreadableError
+from doccapture.core.observability import get_logger, log_step
 from doccapture.core.ports import TabularReader
 from doccapture.core.tabular.assembly import build_result
 from doccapture.core.tabular.result import TabularReadResult
 from doccapture.core.tabular.schema import TableSchema
 from doccapture.infrastructure.evidence import evidence_for, resolve_source, with_locator
+
+_log = get_logger("delimited")
 
 class DelimitedTabularReader(TabularReader):
     """`TabularReader` elválasztott szöveges fájlokra."""
@@ -84,6 +87,14 @@ class DelimitedTabularReader(TabularReader):
         ]
 
         file_evidence = evidence_for(self._config.input_root, relative_path)
+        # `source` RELATIV ut -- abszolutot a naplo-kapu elbuktat.
+        log_step(
+            _log,
+            "delimited.read",
+            source=relative_path,
+            data_rows_offered=len(data_rows),
+            delimiter_detected=(not options.delimiter), encoding_candidates=len(options.encoding_candidates),
+        )
 
         return build_result(
             header_cells=list(grid[header_index]),

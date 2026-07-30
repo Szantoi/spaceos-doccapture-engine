@@ -19,11 +19,14 @@ from __future__ import annotations
 
 from typing import Any, Callable, Iterable, Optional
 
-from doccapture.core.models import Extracted, SourceEvidence
+from doccapture.core.models import Confidence, Extracted, SourceEvidence
+from doccapture.core.observability import get_logger, log_step
 from doccapture.core.tabular.options import TabularOptions
 from doccapture.core.tabular.result import TabularReadResult
 from doccapture.core.tabular.schema import SchemaBinding, TableSchema
 from doccapture.core.tabular.values import interpret_cell, is_blank_cell
+
+_log = get_logger("tabular")
 
 LocatorFactory = Callable[[int, int], str]
 """(sor-szám, oszlop-index) → hely-megjelölés a bizonyítékban.
@@ -106,6 +109,25 @@ def build_result(
             f"{skipped_blank} sor üresként kihagyva (az azonosító oszlopok "
             f"{list(schema.identity_keys)} mindegyike üres volt)"
         )
+
+    # A napló a VEGLEGES szamokat mondja, nem a menet kozbenieket: kulonben a log
+    # es a visszaadott eredmeny ket igazsag lenne ugyanarrol. Ertek NEM kerul ki,
+    # csak szerkezet es darabszam (QUALITY §3 + a naplo-kapu).
+    log_step(
+        _log,
+        "tabular.assemble",
+        rows=len(rows),
+        skipped_blank=skipped_blank,
+        columns_bound=len(binding.columns),
+        headers_unmatched=len(binding.unmatched_headers),
+        units_detected=len(binding.units),
+        truncated=truncated,
+        needs_human=any(
+            item.confidence is not Confidence.CONFIRMED
+            for row in rows
+            for item in row.values()
+        ),
+    )
 
     return TabularReadResult(
         rows=rows,

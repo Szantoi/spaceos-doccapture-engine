@@ -29,12 +29,15 @@ from typing import Any, Optional
 
 from doccapture.core.config import CaptureConfig
 from doccapture.core.errors import SourceUnreadableError
+from doccapture.core.observability import get_logger, log_step
 from doccapture.core.ports import TabularReader
 from doccapture.core.tabular.assembly import build_result
 from doccapture.core.tabular.result import TabularReadResult
 from doccapture.core.tabular.schema import TableSchema
 from doccapture.core.tabular.values import UnreadableCell
 from doccapture.infrastructure.evidence import evidence_for, resolve_source, with_locator
+
+_log = get_logger("workbook")
 
 # Jelzo-ertek a kepletre, aminek nincs tarolt erteke. A tipus a MAGBAN lakik
 # (`UnreadableCell`), mert ez altalanos fogalom: "van itt tartalom, de nem
@@ -110,6 +113,14 @@ class WorkbookTabularReader(TabularReader):
         ]
 
         file_evidence = evidence_for(self._config.input_root, relative_path)
+        # `source` RELATIV ut -- abszolutot a naplo-kapu elbuktat.
+        log_step(
+            _log,
+            "workbook.read",
+            source=relative_path,
+            data_rows_offered=len(data_rows),
+            sheet=sheet_title, formula_without_cache=sum(1 for row in grid for cell in row if isinstance(cell, UnreadableCell)),
+        )
 
         result = build_result(
             header_cells=list(grid[header_index]),

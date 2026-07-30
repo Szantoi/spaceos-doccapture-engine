@@ -1,0 +1,75 @@
+{
+  "_comment": [
+    "PELDA-PROFIL, semleges: gyartas soran keletkezo munkalap.",
+    "",
+    "Iparag-agnosztikus: a mezok altalanos gyartasi fogalmak (munkaszam, muvelet,",
+    "gepido, darabszam). Iparag-specifikus mezot (anyag-tipus, meret-tabla) a",
+    "FOGYASZTO ad hozza -- a motorba az nem kerulhet, mert akkor egyetlen iparagban",
+    "lenne hasznalhato.",
+    "",
+    "A szabaly M3+M4: az osszes ido = ciklusido x darabszam. Ha a darabszam olvasasa",
+    "torekeny (kezzel irt szam), a szabaly VISSZASZAMOLJA -- es NEEDS_REVIEW-t ad,",
+    "mert a szarmaztatott ertek soha nem lehet CONFIRMED."
+  ],
+
+  "profile_id": "munkalap",
+  "description": "Gyartas soran keletkezo munkalap (munkaszam, muvelet, ido, darabszam)",
+
+  "required_anchors": ["munkalap"],
+  "optional_anchors": [
+    "munkaszam", "job number", "muvelet", "operation",
+    "gepido", "machine time", "darabszam", "quantity", "gep", "machine"
+  ],
+
+  "fields": [
+    {
+      "key": "job_number",
+      "labels": ["Munkaszam", "Munka szama", "Job number"],
+      "value_type": "text",
+      "required": true
+    },
+    {
+      "key": "operation",
+      "labels": ["Muvelet", "Operation"],
+      "value_type": "text"
+    },
+    {
+      "key": "machine",
+      "labels": ["Gep", "Machine", "Munkahely", "Work centre"],
+      "value_type": "text"
+    },
+    {
+      "key": "quantity",
+      "labels": ["Darabszam", "Mennyiseg", "Quantity"],
+      "value_type": "integer",
+      "required": true
+    },
+    {
+      "key": "cycle_time",
+      "labels": ["Ciklusido", "Egysegido", "Cycle time"],
+      "value_type": "number"
+    },
+    {
+      "key": "total_time",
+      "labels": ["Osszes ido", "Gepido", "Total time", "Machine time"],
+      "value_type": "number"
+    },
+    {
+      "key": "operator_note",
+      "labels": ["Megjegyzes", "Note"],
+      "value_type": "text",
+      "field_type": "keziras"
+    }
+  ],
+
+  "rules": [
+    {
+      "name": "osszes ido = ciklusido x darabszam",
+      "left": "total_time",
+      "operands": ["cycle_time", "quantity"],
+      "operation": "product",
+      "tolerance": 0.5,
+      "derive": true
+    }
+  ]
+}

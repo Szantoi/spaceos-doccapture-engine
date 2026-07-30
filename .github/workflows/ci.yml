@@ -28,28 +28,8 @@ jobs:
       # bizonyitjuk, hogy a tablazat-olvaso valoban NINCS telepitve (kulonben a
       # meres semmit nem allit), aztan lefuttatjuk azt a reszt, aminek mennie kell.
       # ------------------------------------------------------------------
-      - name: A tablazat-olvaso valoban NINCS telepitve
-        run: |
-          python - <<'PY'
-          import importlib.util, sys
-          if importlib.util.find_spec("openpyxl") is not None:
-              sys.exit("A tablazat-olvaso telepitve van -- a fuggoseg-mentesseg merese igy semmit nem bizonyit.")
-          print("openpyxl: nincs telepitve (a meres ervenyes)")
-          PY
-
-      - name: Fuggoseg-mentes ut tesztjei
-        env:
-          PYTHONPATH: src
-        run: |
-          python -m unittest -v \
-            tests.test_models \
-            tests.test_config \
-            tests.test_core_boundary \
-            tests.test_ports \
-            tests.test_tabular_schema \
-            tests.test_tabular_values \
-            tests.test_tabular_delimited \
-            tests.test_load_tabular
+      - name: Fuggoseg-mentesseg merese (negativ kontrollal)
+        run: python tools/measure_dependency_free.py
 
       # ------------------------------------------------------------------
       # 2. kor: A TELJES suite, a munkafuzet-extraval
@@ -72,3 +52,14 @@ jobs:
         env:
           PYTHONPATH: src
         run: python -m unittest discover -s tests -v
+
+      # ------------------------------------------------------------------
+      # 3. kor: a KAPUK meg is fognak-e
+      #
+      # Egy zold suite azt mondja, hogy a kod atmegy a tesztjein. Azt NEM, hogy
+      # a tesztek fognak-e barmin. A mutacios ellenorzo minden kapunal
+      # bizonyitja, hogy szandekos elrontasra pirosra valt -- es kimondja, ha
+      # egy meresi pont ELMOZDULT (ERVENYTELEN), nem hallgatja el.
+      # ------------------------------------------------------------------
+      - name: Mutacios kapu-meres
+        run: python tools/mutation_check.py

@@ -99,17 +99,84 @@ köre a táblázat-olvasó **nélkül** futtatja őket).
 
 Részletes tervezési szándék: [`docs/DESIGN-DC-01b-tablazatos-betolto.md`](docs/DESIGN-DC-01b-tablazatos-betolto.md).
 
+## Irat-típus szerinti elemzés (DC-06)
+
+**Két független tengely.** Az `InputKind` azt mondja meg, *hogyan olvassuk*; az
+**irat-profil** azt, hogy *mi az irat, és mit kérünk tőle*. A kettő **szorzat**:
+egy munkalap jöhet szkennelve és táblázatként is.
+
+```python
+from doccapture.infrastructure.profile_registry import load_profiles
+from doccapture.infrastructure.text_lines import TextLineReader
+from doccapture.usecases.analyze_document import DocumentAnalyzer
+from doccapture.core.models import InputKind
+
+profiles = load_profiles("profiles")            # a profil ADAT, nem kód
+lines, evidence = TextLineReader(config).read("irat.txt")
+record = DocumentAnalyzer(profiles, config).analyze(
+    lines, input_kind=InputKind.TEXT_LAYER_DOCUMENT, evidence=evidence
+)
+
+record.fields["document_profile"]   # a felismert típus, megbízhatósággal
+record.fields["job_number"]         # a profil szerinti mező, bizonyítékkal
+record.diagnostics                  # az önellenőrző számtan mérlege
+```
+
+**A felismerés bizonyítékkal dönt, nem valószínűséggel** — és **holtversenynél
+nem dönt**: egy téves irat-típus nem egy mezőt ront el, hanem az egész elemzést,
+és sikeresnek látszik. Ezért a „nem tudom, milyen irat" **érvényes válasz**.
+
+**Az önellenőrző számtan ingyen ellenőrzés.** A profil deklarálja az iraton
+meglévő egyenlőségeket (`végösszeg = adóalap + adó`, `összes idő = ciklusidő ×
+darabszám`). Ha nem áll, **jelölünk, nem javítunk** — és a diagnosztika
+**megnevezi, melyik egyenlőség bomlott el**. Ha egy érték **hiányzik**, de a
+többiből kiszámolható, a szabály **kitölti** — de `NEEDS_REVIEW`-val, mert egy
+származtatott érték, ami megkülönböztethetetlen a leolvasottól, csendes tévedés.
+
+⚠ **A profilok konfiguráció.** A `profiles/` alatt **semleges példák** vannak; a
+konkrét mezőkészlet a fogyasztóé, és a bevezetés során **nő**. Egy iparági mező a
+motorban azt jelentené, hogy a termék egyetlen iparágban használható.
+
+Tervezési szándék: [`docs/DESIGN-DC-06-dokumentum-profilok.md`](docs/DESIGN-DC-06-dokumentum-profilok.md).
+
+## Elvek
+
+**[`docs/PRINCIPLES.md`](docs/PRINCIPLES.md)** — 15 elv, éles üzemben megvett
+tapasztalatból, és **minden elv mellett kiírva, hogy fedi-e gépi kapu**. Ma:
+**10 teljes, 2 részleges, 3 nem fedett** — és a három nem fedett **nevesítve** van,
+mert egy „elv", amit semmi nem őriz, dokumentáció, nem szabály.
+*(A számot teszt köti a táblához: `tests/test_principles.py`.)*
+
+## Mérőeszközök
+
+```
+python tools/neutrality_guard.py           # marka-, iparagi es ugyfelnev-kapu
+python tools/measure_dependency_free.py    # a fuggoseg-mentesseg MERESE
+python tools/mutation_check.py             # a kapuk HARAPNAK-e (10/10)
+```
+
+Mindhárom a CI-ban is fut. A második **negatív kontrollal** kezd (bizonyítja,
+hogy a blokkoló fog — különben a mérés semmit nem állít), és **kimondja a
+kihagyott teszteket**: egy `skipUnless`-szel csendben kimaradó modul zöld
+számlálót adna, ami semmit nem mért.
+
 ## Architektúra
 
 Hexagonális (portok és adapterek):
 
 ```
 src/doccapture/
-├─ core/            domain-modellek, portok, config, hibák  — NINCS infra-import
-│  └─ tabular/      séma-illesztés, érték-értelmezés, összeállítás
-├─ infrastructure/  adapterek (parse, OCR, vision, PDF, tár) + bizonyíték-lánc
-└─ usecases/        a fázisok
+├─ core/            domain-modellek, portok, config, hibák, naplózás  — NINCS infra-import
+│  ├─ tabular/      HOGYAN olvassuk: séma-illesztés, érték-értelmezés, összeállítás
+│  └─ documents/    MI az irat: profil, felismerés, mező-kinyerés, önellenőrző számtan
+├─ infrastructure/  adapterek + bizonyíték-lánc + profil-katalógus
+└─ usecases/        a fázisok (táblázat-betöltés, irat-elemzés)
+profiles/           SEMLEGES példa-profilok — adat, nem kód
+tools/              mérőeszközök (semlegesség, függőség-mentesség, mutáció)
 ```
+
+**A két alcsomag a két tengely**, és az érték-értelmezés **mindkettőn ugyanaz**
+(`core/tabular/values.py`) — ha kettő lenne, az egyik előbb-utóbb elcsúszna.
 
 **Az oszlop-térképezés a magban van, nem az adapterekben.** Ha az adapterekben
 lenne, ugyanarról a szabályról két igazság keletkezne — és amikor a kettő

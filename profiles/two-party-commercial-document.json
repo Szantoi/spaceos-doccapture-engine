@@ -1,0 +1,72 @@
+{
+  "_comment": [
+    "PELDA-PROFIL, semleges: ket fel kozotti kereskedelmi irat (ertekesitesi vagy",
+    "beszerzesi bizonylat). Iparagi mezo NINCS benne -- a konkret mezokeszlet a",
+    "FOGYASZTOE, es a bevezetes soran no.",
+    "",
+    "⚠ M1 -- HORGONY-FEL ES ELLENFEL: a felismereshez add hozza a SAJAT stabil",
+    "azonositodat (adoszam, regisztracios szam) `required_anchors`-kent. Nevre NE",
+    "illessz: a nev elirhato, az azonosito nem. Ez a fajl szandekosan NEM tartalmaz",
+    "valodi azonositot -- ez a repo publikus.",
+    "",
+    "A ket szabaly az onellenorzo szamtan (M3): ha nem all, JELOLUNK, nem javitunk,",
+    "es a diagnosztika megmondja, MELYIK egyenloseg bomlott el."
+  ],
+
+  "profile_id": "ketoldalu-kereskedelmi-irat",
+  "description": "Ket fel kozotti kereskedelmi bizonylat (osszeg, adoalap, ado, vegosszeg)",
+
+  "required_anchors": ["bizonylat"],
+  "optional_anchors": [
+    "adoalap", "tax base", "ado", "vat", "vegosszeg", "total",
+    "fizetesi hatarido", "due date", "bizonylatszam", "document number"
+  ],
+
+  "fields": [
+    {
+      "key": "document_number",
+      "labels": ["Bizonylatszam", "Bizonylat szama", "Document number"],
+      "value_type": "text",
+      "required": true
+    },
+    {
+      "key": "issue_date",
+      "labels": ["Kelt", "Kiallitas datuma", "Issue date"],
+      "value_type": "date"
+    },
+    {
+      "key": "net_amount",
+      "labels": ["Adoalap", "Netto ertek", "Tax base", "Net amount"],
+      "value_type": "number",
+      "required": true
+    },
+    {
+      "key": "tax_amount",
+      "labels": ["Ado", "Ado osszege", "Tax amount"],
+      "value_type": "number"
+    },
+    {
+      "key": "gross_amount",
+      "labels": ["Vegosszeg", "Brutto ertek", "Total", "Gross amount"],
+      "value_type": "number",
+      "required": true
+    },
+    {
+      "key": "counterparty_identifier",
+      "labels": ["Partner azonosito", "Counterparty identifier"],
+      "value_type": "text",
+      "field_type": "hosszu-azonosito"
+    }
+  ],
+
+  "rules": [
+    {
+      "name": "vegosszeg = adoalap + ado",
+      "left": "gross_amount",
+      "operands": ["net_amount", "tax_amount"],
+      "operation": "sum",
+      "tolerance": 1.0,
+      "derive": true
+    }
+  ]
+}

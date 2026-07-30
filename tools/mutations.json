@@ -1,0 +1,105 @@
+{
+  "_comment": [
+    "A mutacio-keszlet: minden bejegyzes egy KAPUT nevez meg, es kimondja, MIT",
+    "allit a kapu. Ha egy mutacio 'NEM FOG', az azt jelenti, hogy a kapu azt a",
+    "viselkedest NEM meri -- nem azt, hogy a kod hibas.",
+    "",
+    "A 'find' szoveg a kodban valo pontos egyezes. Ha atirjuk a kodot es a pont",
+    "elmozdul, a meres ERVENYTELEN lesz -- es ezt az eszkoz kimondja, nem",
+    "hallgatja el. Ez SZANDEKOS: egy csendben kimarado mutacio uresen zold szamot",
+    "adna.",
+    "",
+    "A 'not_covered' szakasz azt nevezi meg, amit EGYIK mutacio SEM fed. A",
+    "mutacio az erzekenyseget bizonyitja, nem a lefedettseget."
+  ],
+  "mutations": [
+    {
+      "name": "hatar-kapu: infrastruktura-import a MAG uj alcsomagjaba",
+      "asserts": "a hatar-kapu belat a core/ alcsomagjaiba is (rglob, nem glob)",
+      "file": "src/doccapture/core/tabular/values.py",
+      "find": "import datetime as _dt",
+      "replace": "import datetime as _dt\nimport openpyxl  # MUTACIO",
+      "test": "tests.test_core_boundary"
+    },
+    {
+      "name": "sor-uresseg: az olvashatatlan cella ureskent szamit",
+      "asserts": "a nema sor-eltunes merve van (gyorsitotar nelkuli keplet az azonosito oszlopban)",
+      "file": "src/doccapture/core/tabular/values.py",
+      "find": "    if isinstance(raw, UnreadableCell):\n        return False\n    if raw is None:",
+      "replace": "    if isinstance(raw, UnreadableCell):\n        return True  # MUTACIO\n    if raw is None:",
+      "test": "tests.test_tabular_workbook"
+    },
+    {
+      "name": "szam-ketertelmuseg: a ketertelmu szamot elfogadjuk",
+      "asserts": "az 'inkabb hiany, mint teves' szabaly merve van",
+      "file": "src/doccapture/core/tabular/values.py",
+      "find": "            if len(tail) == 3 and 1 <= len(head) <= 3 and head.isdigit() and tail.isdigit():",
+      "replace": "            if False:  # MUTACIO",
+      "test": "tests.test_tabular_values"
+    },
+    {
+      "name": "G4-kapu: a kulso feldolgozas alapbol ENGEDVE",
+      "asserts": "a fail-closed alapallapot merve van (Gabor G4-dontese kodban)",
+      "file": "src/doccapture/core/config.py",
+      "find": "    allow_external_processing: bool = False",
+      "replace": "    allow_external_processing: bool = True  # MUTACIO",
+      "test": "tests.test_config"
+    },
+    {
+      "name": "elvalaszto: a szokoz is lehet jelolt",
+      "asserts": "a felismero-tippeles elleni kapu merve van",
+      "file": "src/doccapture/core/tabular/options.py",
+      "find": "if candidate.isspace() and candidate",
+      "replace": "if False and candidate.isspace() and candidate",
+      "test": "tests.test_tabular_delimited"
+    },
+    {
+      "name": "G1-kapu: szamla-specifikus tipus a magban",
+      "asserts": "a G1-dontes (a bevetelezes a gazda) gepi alakja merve van",
+      "file": "src/doccapture/core/ports.py",
+      "find": "class TextLayerReader(ABC):",
+      "replace": "class InvoiceExtractionPort(ABC):  # MUTACIO\n    pass\n\n\nclass TextLayerReader(ABC):",
+      "test": "tests.test_ports"
+    },
+    {
+      "name": "naplo-kapu: az abszolut ut atmegy a naplon",
+      "asserts": "a naplo nem fedheti fel a gepi konyvtarszerkezetet",
+      "file": "src/doccapture/core/observability.py",
+      "find": "    if value.startswith((\"/\", \"\\\\\")):\n        return True",
+      "replace": "    if False:  # MUTACIO\n        return True",
+      "test": "tests.test_observability"
+    },
+    {
+      "name": "naplo-kapu: a titkot sejteto kulcs atmegy",
+      "asserts": "a naplo nem szivarogtathat titkot",
+      "file": "src/doccapture/core/observability.py",
+      "find": "        if any(hint in lowered for hint in _FORBIDDEN_KEY_HINTS):",
+      "replace": "        if False:  # MUTACIO",
+      "test": "tests.test_observability"
+    },
+    {
+      "name": "profil-felismeres: a holtversenyt eldontjuk",
+      "asserts": "a rossz irat-tipus MINDEN mezot elrontana, ezert holtversenynel nem dontunk",
+      "file": "src/doccapture/core/documents/detect.py",
+      "find": "    if len(best) > 1:",
+      "replace": "    if False:  # MUTACIO",
+      "test": "tests.test_document_detect"
+    },
+    {
+      "name": "onellenorzo szamtan: a bomlo egyenloseget elhallgatjuk",
+      "asserts": "M3 -- a redundancia INGYEN ellenorzes, es a bomlast JELOLJUK, nem javitjuk",
+      "file": "src/doccapture/core/documents/consistency.py",
+      "find": "        if delta > tolerance:",
+      "replace": "        if False:  # MUTACIO",
+      "test": "tests.test_document_consistency"
+    }
+  ],
+  "not_covered": [
+    "datum- es logikai ertelmezes (sima teszt fedi, mutacio nem)",
+    "kodolas-jeloltek sorrendje es a dekodolas-bukas",
+    "max_rows csonkolas-jelzes",
+    "a bizonyitek-lanc hash-elese es a fajlonkenti egyszeri hasheles",
+    "a mertekegyseg fejlecbol kinyerese (unit:<kulcs> mezo)",
+    "a semlegessegi kapu szokeszlete (annak sajat onteszte van)"
+  ]
+}
