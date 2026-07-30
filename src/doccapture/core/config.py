@@ -30,6 +30,7 @@ from typing import Any
 
 from doccapture.core.errors import ConfigurationError
 from doccapture.core.models import InputKind
+from doccapture.core.tabular.options import TabularOptions
 
 # Mezonevek, amik titkot sejtetnek. Nem a teljesseg a cel, hanem hogy a
 # leggyakoribb elirast (`api_key` a configba) gepi kapu fogja meg, ne review.
@@ -115,6 +116,37 @@ class CaptureConfig:
     A konverzió explicit és naplózott — soha nem néma.
     """
 
+    # --- Adatvédelem: hol futhat a modellt igénylő fázis (G4) ---
+    allow_external_processing: bool = False
+    """Elhagyhatja-e a forrás a telepítést egy külső szolgáltató felé.
+
+    **G4-döntés (Gábor, 2026-07-30): helyi alap, külső opcionális.** Ezért az
+    alapérték `False`: a biztonságos viselkedés az alapértelmezés, a külső
+    feldolgozás a **kimondott** kivétel. Ha ez fordítva lenne, egy elfelejtett
+    beállítás miatt ügyfél-számlák mennének ki egy külső szolgáltatóhoz — és
+    semmi nem jelezné.
+
+    Ez nem korlát, hanem **eladási érv**: egy „az adatai nem hagyják el a
+    telephelyet" változat más piacot nyit, és itt a különbség konfiguráció.
+    """
+
+    external_processing_audit_note: str = ""
+    """Miért van engedve a külső feldolgozás — ki, mikor és milyen alapon döntött.
+
+    Kötelező, ha `allow_external_processing` igaz. Miért: egy `true` értékű
+    kapcsoló fél év múlva megmagyarázhatatlan, és senki nem meri visszavenni.
+    Ez a mező teszi a döntést **visszakereshetővé** — nem titkot tárol, hanem
+    indokot.
+    """
+
+    # --- Táblázatos út ---
+    tabular: TabularOptions = field(default_factory=TabularOptions)
+    """A táblázatos bemenet olvasási módja (fejléc-sor, elválasztó, számformátum).
+
+    Beágyazott csomag és nem húsz lapos mező: ezek együtt alkotnak egy értelmes
+    egészt, és laposan szétszórva nem látszana, melyik melyikkel függ össze.
+    """
+
     # --- Bizonytalanság kezelése ---
     human_only_field_types: list[str] = field(default_factory=list)
     """Mezőtípusok, amiket NEM olvasunk gépileg, hanem emberi kitöltésre jelölünk.
@@ -167,6 +199,50 @@ class CaptureConfig:
         }
         return data
 
+    def validate(self) -> None:
+        """Az egész config ellentmondás-mentessége. Fail-fast, induláskor.
+
+        A beágyazott beállításokat is végigkérdezi: ha csak a legfelső szintet
+        ellenőriznénk, egy hibás táblázat-beállítás feldolgozás közben bukna el,
+        vagyis ott, ahol a hatása van, nem ott, ahol az oka.
+        """
+        self.assert_no_secret_values()
+        self.tabular.validate()
+
+        if self.allow_external_processing and not self.external_processing_audit_note.strip():
+            raise ConfigurationError(
+                "A külső feldolgozás engedve van, de nincs megadva indok "
+                "(`external_processing_audit_note`). Egy indoklás nélküli "
+                "engedély fél év múlva megmagyarázhatatlan, és senki nem meri "
+                "visszavenni — ezért kötelező."
+            )
+        if self.redundancy_tolerance < 0:
+            raise ConfigurationError("A redundancia-tűrés nem lehet negatív.")
+
+    def assert_external_processing_allowed(self, adapter_name: str) -> None:
+        """A G4-kapu: elbukik, ha a forrás nem hagyhatja el a telepítést.
+
+        Minden adapternek meg kell hívnia, ami a forrást kiengedi — és ezt
+        **nem** a jóindulat garantálja: az adapter-teszteknek mérni kell, hogy
+        a kapu nélkül nem indul el a hívás.
+
+        Fail-closed: az alapállapot a tiltás, tehát egy elfelejtett beállítás
+        nem szivárgáshoz vezet, hanem kimondott hibához.
+        """
+        if not self.allow_external_processing:
+            raise ConfigurationError(
+                f"A(z) {adapter_name!r} adapter a forrást kiengedné a telepítésből, "
+                f"de a külső feldolgozás nincs engedve (G4). Ha ez szándékos, "
+                f"állítsd `allow_external_processing=True`-ra, és add meg az "
+                f"indokot az `external_processing_audit_note` mezőben."
+            )
+        if not self.external_processing_audit_note.strip():
+            raise ConfigurationError(
+                f"A(z) {adapter_name!r} adapter külső feldolgozást kérne, és az "
+                f"engedve van — de nincs indok. A határátlépés legyen "
+                f"visszakereshető."
+            )
+
     def assert_no_secret_values(self) -> None:
         """Elbukik, ha titkot sejtető mezőbe ÉRTÉK került.
 
@@ -214,6 +290,18 @@ class CaptureConfig:
         known = cls.__dataclass_fields__.keys()
         filtered = {key: value for key, value in data.items() if key in known}
 
+        # A BEAGYAZOTT dataclass visszaallitasa. Ez konnyen kimarad, es a hiba
+        # NEM itt jelenik meg: a `cls(**filtered)` ilyenkor egy sima dict-et tesz
+        # a `tabular` mezobe, es a hiba majd ott bukik ki, ahol valaki
+        # `config.tabular.header_row`-t ir -- vagyis messze az okatol.
+        tabular = filtered.get("tabular")
+        if tabular is not None:
+            if not isinstance(tabular, dict):
+                raise ConfigurationError(
+                    f"A `tabular` beállítás objektumot vár, nem {type(tabular).__name__}-t."
+                )
+            filtered["tabular"] = TabularOptions.from_dict(tabular)
+
         routing = filtered.get("extension_routing")
         if routing is not None:
             try:
@@ -226,5 +314,5 @@ class CaptureConfig:
                 ) from exc
 
         config = cls(**filtered)
-        config.assert_no_secret_values()
+        config.validate()
         return config

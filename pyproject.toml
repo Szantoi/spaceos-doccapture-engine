@@ -1,8 +1,21 @@
 [project]
 name = "doccapture-engine"
-version = "0.1.0"
+version = "0.2.0"
 description = "Iparag-agnosztikus dokumentum-befogado motor"
 requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+
+# A MAG fuggoseg-mentes, es ez nem veletlen: az elvalasztott szoveges ut (a
+# cegek integralasanak leggyakoribb bemenete) kulso csomag nelkul mukodik.
+# Aki csak azt hasznalja, ne fizesse meg egy tablazat-olvaso telepitesi
+# kockazatat -- ez piaci elony, ne dobjuk el egy import kedveert.
+dependencies = []
+
+[project.optional-dependencies]
+# A munkafuzet-olvasas kulso csomagot igenyel, es ezt KIMONDVA kerjuk: a hiany
+# ertelmes hibauzenetet ad, nem import-hibat a semmibol.
+tabular = ["openpyxl>=3.1"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -7,20 +7,23 @@ port, hanem burkolt függőség.
 
 Ebben a modulban NINCS infrastruktúra-import (hexagonális határ).
 
-AMIT SZÁNDÉKOSAN NEM EMELTÜNK ÁT
---------------------------------
+AMIT SZÁNDÉKOSAN NEM EMELTÜNK ÁT — ÉS AMI MÁR NEM IS FOG BEKERÜLNI
+------------------------------------------------------------------
 A forrás-prototípusban volt egy **számla-kinyerő port** a hozzá tartozó
-adatszerkezetekkel. Ez ide **nem** kerül be, két okból:
+adatszerkezetekkel. Ez ide **nem** kerül be, és ez már nem nyitott kérdés:
 
-1. **Ez a G1 kapu tárgya.** Két igazság van kialakulóban ugyanarról (a
-   determinisztikus munkafolyamat és a prototípus portja). Amíg Gábor nem
-   döntött arról, melyik a forrás-igazság, ide bemásolni azt jelentené, hogy
-   a kérdést a kódba írt tényként előredöntjük.
+**G1 ELDÖNTVE (Gábor, 2026-07-30): a bevételezés a gazda.** A számla-értelmezés
+az iparági rétegé (a bevételezési repó); a motor **bemenet-előkészítő** marad —
+sorokat, táblákat és szövegréteget ad, nem számla-jelentést. Két igazság volt
+kialakulóban ugyanarról, és ez a döntés zárja: **egy** gazda van.
 
-2. **Nem is ide tartozik.** A számla-sorok értelmezése — cikkszám-párosítás,
-   mennyiség-átváltás — nem az „mi van a papíron" kérdés, hanem a „mi kerüljön
-   a rendszerbe". Az az iparági réteg dolga, és ott determinisztikus szabály +
-   ember, nem modell.
+Miért ez a helyes határ, a döntéstől függetlenül is: a számla-sorok értelmezése
+— cikkszám-párosítás, mennyiség-átváltás — nem az „mi van a papíron" kérdés,
+hanem a „mi kerüljön a rendszerbe". Az utóbbi determinisztikus szabály + ember,
+nem modell, és **auditálható** kell hogy legyen.
+
+A `tests/test_ports.py` gépi kapuja ezért **véglegesen** marad: ha egyszer
+elbukik, az nem hiba, hanem jelzés, hogy valaki a határon átlépett.
 
 A prototípus adatszerkezete egyébként beégetett pénznemmel és szöveges
 állapot-mezővel dolgozott — mintaként tanulság, receptként hiba lett volna.
@@ -34,6 +37,8 @@ from typing import Any, Optional
 
 from doccapture.core.layout import PageLayout
 from doccapture.core.models import CaptureRecord, Extracted
+from doccapture.core.tabular.result import TabularReadResult
+from doccapture.core.tabular.schema import TableSchema
 
 
 class TabularReader(ABC):
@@ -43,13 +48,24 @@ class TabularReader(ABC):
     egy cég integrálásakor az adatok többsége már digitális: ha ezt is a
     felismerő úton oldanánk meg, a legolcsóbb esetet fizetnénk meg a legdrágábban.
 
-    Az aktív tartalmat (makró, képlet, külső hivatkozás) az adapter NEM futtatja
-    — a tárolt gyorsítótárat olvassa.
+    Az aktív tartalmat (makró, képlet, lekérdezés, külső hivatkozás) az adapter
+    **NEM futtatja** — a tárolt gyorsítótárat olvassa (M11). Ez egyszerre
+    biztonsági és determinizmus-kérdés: egy futtatott képlet ma és holnap mást
+    adhat.
     """
 
     @abstractmethod
-    def read_rows(self, relative_path: str) -> list[dict[str, Extracted[Any]]]:
-        """Sorok beolvasása. Az érték mindig a megbízhatóságával együtt jön."""
+    def read(self, relative_path: str, schema: TableSchema) -> TabularReadResult:
+        """Egy táblázat beolvasása a megadott séma szerint.
+
+        A **séma paraméter**, nem konstruktor-adat: egy adapter ugyanabban a
+        bevezetésben több különböző táblát olvas (árlista, cikktörzs,
+        beszállítói lista), és mindegyiknek más az alakja.
+
+        Az érték mindig a megbízhatóságával együtt jön; üres cella `MISSING`,
+        azaz **adat**, nem kivétel. Kivétel csak akkor, ha magát a forrást vagy
+        a fejlécet nem tudtuk értelmezni.
+        """
 
 
 class TextLayerReader(ABC):
@@ -92,9 +108,19 @@ class HandwritingTranscriber(ABC):
 class VisualAssistant(ABC):
     """Vizuális megértést igénylő segédkérdés a forrás egy darabjára.
 
-    ⚠ Ennek a portnak az ADAPTERE adatvédelmi kérdés (G4): eldöntendő, hogy a
-    forrás elhagyhatja-e a telepítést, vagy a fázis csak helyben futhat. A PORT
-    létezése ettől független — a telepítési alak nem domain-döntés.
+    **G4 ELDÖNTVE (Gábor, 2026-07-30): helyi alap, külső opcionális.** A
+    modellt igénylő fázis alapértelmezésben **a telepítésen belül** fut; külső
+    szolgáltatóhoz a forrás CSAK akkor kerülhet, ha a config ezt kimondottan
+    engedi (`allow_external_processing`), és akkor is **naplózva**.
+
+    A kaput a `CaptureConfig.assert_external_processing_allowed()` adja, és
+    minden olyan adapternek meg kell hívnia, ami a forrást kiengedi a
+    telepítésből. A port létezése ettől független — a telepítési alak nem
+    domain-döntés, de a **határátlépés engedélye** az.
+
+    Termékként ez a döntés két piacot nyit egy kódbázison: van „az adatai nem
+    hagyják el a telephelyet" változat, és van felhő-alapú — a különbség
+    **konfiguráció**, nem külön termék.
 
     A motor ezt CSAK olvasásra használja („mi van a papíron"). Arra soha, hogy
     mi kerüljön a fogadó rendszerbe.

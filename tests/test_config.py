@@ -77,6 +77,92 @@ class SafeDefaultTests(unittest.TestCase):
         self.assertIn("~$*", CaptureConfig().excluded_name_patterns)
 
 
+class ExternalProcessingGateTests(unittest.TestCase):
+    """G4 (Gábor, 2026-07-30): **helyi alap, külső opcionális.**
+
+    A kapu fail-closed: az alapállapot a tiltás, tehát egy elfelejtett beállítás
+    nem szivárgáshoz vezet, hanem kimondott hibához.
+    """
+
+    def test_a_kulso_feldolgozas_alapbol_TILOS(self) -> None:
+        self.assertFalse(CaptureConfig().allow_external_processing)
+
+    def test_a_kapu_elbukik_ha_nincs_engedve(self) -> None:
+        with self.assertRaises(ConfigurationError) as ctx:
+            CaptureConfig().assert_external_processing_allowed("valamilyen-adapter")
+        self.assertIn("valamilyen-adapter", str(ctx.exception))
+        self.assertIn("G4", str(ctx.exception))
+
+    def test_INDOK_nelkuli_engedely_is_elbukik(self) -> None:
+        """Egy indoklás nélküli `true` fél év múlva megmagyarázhatatlan, és
+        senki nem meri visszavenni — ezért kötelező az indok."""
+        config = CaptureConfig(allow_external_processing=True)
+        with self.assertRaises(ConfigurationError):
+            config.assert_external_processing_allowed("valamilyen-adapter")
+        with self.assertRaises(ConfigurationError):
+            config.validate()
+
+    def test_indokolt_engedely_atmegy(self) -> None:
+        """A másik irány: egy mindig-tiltó kapu használhatatlan terméket ad."""
+        config = CaptureConfig(
+            allow_external_processing=True,
+            external_processing_audit_note="G4: helyi alap, külső opcionális — 2026-07-30",
+        )
+        config.validate()
+        config.assert_external_processing_allowed("valamilyen-adapter")  # nem dobhat
+
+    def test_az_indok_nem_lehet_csak_terkoz(self) -> None:
+        """Enélkül a kapu egy szóközzel kikapcsolható lenne."""
+        config = CaptureConfig(
+            allow_external_processing=True, external_processing_audit_note="   "
+        )
+        with self.assertRaises(ConfigurationError):
+            config.validate()
+
+
+class NestedOptionsTests(unittest.TestCase):
+    """A beágyazott beállítás visszaállítása betöltéskor.
+
+    ⚠ Ez a legkönnyebben kimaradó lépés, és a hiba NEM ott jelenik meg, ahol az
+    oka van: a `cls(**adat)` egy sima szótárat tenne a mezőbe, és a bukás majd
+    ott lesz, ahol valaki `config.tabular.header_row`-t ír.
+    """
+
+    def test_a_mentes_es_betoltes_visszaadja_a_TabularOptions_tipust(self) -> None:
+        config = CaptureConfig()
+        config.tabular.header_row = 3
+        config.tabular.decimal_separator = ","
+
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp, "config.json")
+            config.save(str(target))
+            loaded = CaptureConfig.load(str(target))
+
+        from doccapture.core.tabular.options import TabularOptions
+
+        self.assertIsInstance(loaded.tabular, TabularOptions)
+        self.assertEqual(loaded.tabular.header_row, 3)
+        self.assertEqual(loaded.tabular.decimal_separator, ",")
+
+    def test_a_beagyazott_beallitas_hibaja_INDULASKOR_bukik(self) -> None:
+        """Ha csak a legfelső szintet ellenőriznénk, a hiba feldolgozás közben
+        derülne ki — ott, ahol a hatása van, nem ott, ahol az oka."""
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp, "config.json")
+            target.write_text(
+                json.dumps({"tabular": {"header_row": 0}}), encoding="utf-8"
+            )
+            with self.assertRaises(ConfigurationError):
+                CaptureConfig.load(str(target))
+
+    def test_a_nem_objektum_tipusu_beallitas_kimondott_hiba(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp, "config.json")
+            target.write_text(json.dumps({"tabular": "igen"}), encoding="utf-8")
+            with self.assertRaises(ConfigurationError):
+                CaptureConfig.load(str(target))
+
+
 class RoutingTests(unittest.TestCase):
     def test_a_tablazatos_bemenet_nem_a_felismero_utra_megy(self) -> None:
         routing = CaptureConfig().extension_routing

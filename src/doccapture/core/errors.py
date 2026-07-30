@@ -40,4 +40,31 @@ class ConfigurationError(PermanentError):
 
     Fail-fast: inkább induláskor bukjunk el, mint hogy egy hiányzó beállítás
     miatt csendben rossz eredményt adjunk.
+
+    Ide tartozik a **hibás séma-leírás** is (üres kulcs, ismeretlen oszlop-típus,
+    nem létező kulcsra hivatkozó szabály): az a beállításunk hibája, nem a
+    forrásé — és a kettő szétválasztása azért fontos, mert az egyiket mi
+    javítjuk, a másikat az ügyfél.
+    """
+
+
+class SchemaMismatchError(SourceUnreadableError):
+    """A FORRÁS nem illeszkedik a sémára (hiányzó kötelező oszlop).
+
+    Miért a `SourceUnreadableError` alatt: a séma rendben van, csak ez a fájl
+    nem az, aminek hittük. A hívó ebből tudja, hogy **a fájlt** kell megnézni,
+    nem a beállítást.
+    """
+
+
+class AmbiguousHeaderError(SchemaMismatchError):
+    """A fejléc-illesztés kétértelmű: több oszlop illik ugyanarra a mezőre.
+
+    Külön hibafajta, mert a helyes válasz IS más: itt nem a fájl rossz és nem is
+    a séma hibás önmagában — a kettő **együtt** nem dönthető el. A javítás az
+    elfogadott fejlécek pontosítása.
+
+    Amiért egyáltalán kivétel: a kényelmes alternatíva („vedd az első illeszkedő
+    oszlopot") működne, és épp ezért lenne veszélyes — a rossz oszlopból töltés
+    hónapokig nem derülne ki.
     """

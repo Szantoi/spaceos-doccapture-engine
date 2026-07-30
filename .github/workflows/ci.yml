@@ -20,7 +20,55 @@ jobs:
       - name: Semlegessegi kapu
         run: python tools/neutrality_guard.py
 
-      - name: Tesztek
+      # ------------------------------------------------------------------
+      # 1. kor: FUGGOSEG NELKUL
+      #
+      # A README es a pyproject azt allitja, hogy a mag es az elvalasztott
+      # szoveges ut kulso csomag nelkul mukodik. Ez a kor MEGMERI: eloszor
+      # bizonyitjuk, hogy a tablazat-olvaso valoban NINCS telepitve (kulonben a
+      # meres semmit nem allit), aztan lefuttatjuk azt a reszt, aminek mennie kell.
+      # ------------------------------------------------------------------
+      - name: A tablazat-olvaso valoban NINCS telepitve
+        run: |
+          python - <<'PY'
+          import importlib.util, sys
+          if importlib.util.find_spec("openpyxl") is not None:
+              sys.exit("A tablazat-olvaso telepitve van -- a fuggoseg-mentesseg merese igy semmit nem bizonyit.")
+          print("openpyxl: nincs telepitve (a meres ervenyes)")
+          PY
+
+      - name: Fuggoseg-mentes ut tesztjei
+        env:
+          PYTHONPATH: src
+        run: |
+          python -m unittest -v \
+            tests.test_models \
+            tests.test_config \
+            tests.test_core_boundary \
+            tests.test_ports \
+            tests.test_tabular_schema \
+            tests.test_tabular_values \
+            tests.test_tabular_delimited \
+            tests.test_load_tabular
+
+      # ------------------------------------------------------------------
+      # 2. kor: A TELJES suite, a munkafuzet-extraval
+      # ------------------------------------------------------------------
+      - name: A tablazatos extra telepitese
+        run: python -m pip install --disable-pip-version-check ".[tabular]"
+
+      # A munkafuzet-tesztek `skipUnless`-szel vannak vedve. Ha az extra
+      # telepitese elszall, azok CSENDBEN kimaradnanak, es a suite ZOLD lenne --
+      # egy uresen zold szamlalo. Ezert itt kimondva ellenorizzuk, hogy a
+      # fuggoseg megvan, MIELOTT a "mind zold" szamot barmire hasznalnank.
+      - name: A munkafuzet-ut fuggosege megvan (nema kihagyas ellen)
+        run: |
+          python - <<'PY'
+          import openpyxl
+          print("openpyxl", openpyxl.__version__)
+          PY
+
+      - name: Teljes suite
         env:
           PYTHONPATH: src
         run: python -m unittest discover -s tests -v
