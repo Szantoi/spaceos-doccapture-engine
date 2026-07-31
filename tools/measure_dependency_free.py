@@ -51,7 +51,6 @@ DEPENDENCY_FREE_MODULES = (
     "tests.test_analyze_document",
     "tests.test_contract",
     "tests.test_measurement_completeness",
-    "tests.test_license_guard",
     "tests.test_columns",
 )
 
@@ -70,7 +69,16 @@ DEFAULT_BLOCKED = ("openpyxl", "pypdfium2")
 # teszt-fajlban allt literalkent, az eszkoz pedig nem tudott rola -- vagyis a
 # ket helyen ket kulonbozo tudas volt ugyanarrol a felosztasrol.
 WORKBOOK_DEPENDENT_MODULES = ("tests.test_tabular_workbook",)
-DOCUMENT_DEPENDENT_MODULES = ("tests.test_text_layer",)
+# A licenc-kapu tesztje ALPROCESSZBEN futtatja a kaput, es exit 0-t var. A kapu
+# viszont elbukik, ha egy DEKLARALT fuggoseg nincs telepitve ("egy nem mert
+# fuggoseg nem rendben") -- tehat ez a modul strukturalisan NEM a fuggoseg-mentes
+# korbe valo, hanem oda, ahol az extrak mar fent vannak.
+#
+# ⚠ Miert nem derult ki fejlesztoi gepen: a fuggoseg-mentes kor az importokat a
+# SAJAT folyamataban blokkolja, az alprocessz viszont nem orokli a blokkolast --
+# ahol az extrak globalisan telepitve vannak, ott a teszt ZOLD marad. A CI-n, ahol
+# tenyleg nincsenek telepitve, azonnal kiderult. (Root-lelet, 2026-07-31.)
+DOCUMENT_DEPENDENT_MODULES = ("tests.test_text_layer", "tests.test_license_guard")
 
 # Kor-nev -> (modulok, a kor ALTAL IGENYELT csomagok). Az igenyelt csomagokat
 # a kor elejen KIMONDVA ellenorizzuk: ha egy `skipUnless`-szel vedett modul
