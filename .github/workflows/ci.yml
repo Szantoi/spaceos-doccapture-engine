@@ -14,6 +14,19 @@ jobs:
         with:
           python-version: "3.12"
 
+      # A `packaging` a licenc-kapu MARKER-kiertekelesehez kell, es mar az 1.
+      # kornek is (a `test_license_guard` importalja a modult). A kapu
+      # SZANDEKOSAN hangosan bukik nelkule -- nem esik vissza csendben egy
+      # gyengebb meresre --, ezert ez ELOFELTETEL, nem a kapu gyengitese.
+      #
+      # ⚠ Es amit ez NEM ront el: az 1. kor "fuggoseg nelkul" allitasat. Az arrol
+      # szol, hogy a MOTOR fut az `openpyxl`/`pypdfium2` extrak nelkul (a mero
+      # eszkoz ezt a kettot blokkolja es a blokkolast bizonyitja is). A
+      # `packaging` a KAPUK szerszama, nem a motor fuggosege -- a mag
+      # `dependencies` listaja tovabbra is ures.
+      - name: A kapuk elofeltetele (marker-kiertekeles)
+        run: python -m pip install --disable-pip-version-check packaging
+
       # A semlegessegi kapu ELOL fut: ha markanev vagy iparagi szo kerult a
       # csomagba, azt olcsobb itt megtudni, mint a fogyasztonal. A csomag akkor
       # eladhato, ha barmely iparagban hasznalhato.
@@ -75,12 +88,7 @@ jobs:
       # ugyanaz -- a surya-ocr 0.20.0 ELOTT GPL, attol Apache-2.0, tehat a licenc a
       # VERZIO tulajdonsaga.
       #
-      # A `packaging` a marker-kiertekeleshez kell. A kapu SZANDEKOSAN hangosan
-      # bukik nelkule (nem esik vissza csendben egy gyengebb meresre), ezert a
-      # telepitese a kapu ELOFELTETELE, nem a kapu gyengitese.
-      - name: A licenc-kapu elofeltetele (marker-kiertekeles)
-        run: python -m pip install --disable-pip-version-check packaging
-
+      # (A `packaging` elofeltetel mar a workflow elejen telepitve.)
       - name: Licenc-kapu (G5, negativ + pozitiv kontrollal)
         run: python tools/license_guard.py
 
