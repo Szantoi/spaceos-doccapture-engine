@@ -1,0 +1,107 @@
+{
+  "contract_version": "1.0.0",
+  "input_kind": "text_layer_document",
+  "evidence": {
+    "relative_path": "munkalap.txt",
+    "content_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "locator": null
+  },
+  "fields": {
+    "document_profile": {
+      "value": "munkalap",
+      "confidence": "confirmed",
+      "value_type": "text",
+      "note": null,
+      "evidence": {
+        "relative_path": "munkalap.txt",
+        "content_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "locator": null
+      }
+    },
+    "job_number": {
+      "value": "MK-2026-001",
+      "confidence": "confirmed",
+      "value_type": "text",
+      "note": null,
+      "evidence": {
+        "relative_path": "munkalap.txt",
+        "content_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "locator": "L2"
+      }
+    },
+    "operation": {
+      "value": "elokeszites",
+      "confidence": "confirmed",
+      "value_type": "text",
+      "note": null,
+      "evidence": {
+        "relative_path": "munkalap.txt",
+        "content_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "locator": "L3"
+      }
+    },
+    "machine": {
+      "value": "G-04",
+      "confidence": "confirmed",
+      "value_type": "text",
+      "note": null,
+      "evidence": {
+        "relative_path": "munkalap.txt",
+        "content_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "locator": "L4"
+      }
+    },
+    "quantity": {
+      "value": 20,
+      "confidence": "needs_review",
+      "value_type": "integer",
+      "note": "osszes ido = ciklusido x darabszam: érintett a bomló egyenlőségben",
+      "evidence": {
+        "relative_path": "munkalap.txt",
+        "content_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "locator": "L5"
+      }
+    },
+    "cycle_time": {
+      "value": 1.5,
+      "confidence": "needs_review",
+      "value_type": "number",
+      "note": "osszes ido = ciklusido x darabszam: érintett a bomló egyenlőségben",
+      "evidence": {
+        "relative_path": "munkalap.txt",
+        "content_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "locator": "L6"
+      }
+    },
+    "total_time": {
+      "value": 40.0,
+      "confidence": "needs_review",
+      "value_type": "number",
+      "note": "osszes ido = ciklusido x darabszam: az egyenlőség nem áll — bal=40, jobb=30, eltérés=10 (tűrés 0.5). NEM javítottuk: a helyes érték üzleti döntés.",
+      "evidence": {
+        "relative_path": "munkalap.txt",
+        "content_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "locator": "L7"
+      }
+    },
+    "operator_note": {
+      "value": null,
+      "confidence": "missing",
+      "value_type": null,
+      "note": "emberi kitöltésre jelölve (mezőtípus: 'keziras') — gépi olvasás kikapcsolva",
+      "evidence": {
+        "relative_path": "munkalap.txt",
+        "content_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "locator": "L8"
+      }
+    }
+  },
+  "rows": [],
+  "diagnostics": [
+    "2 profil megvizsgálva, 1 jelölt",
+    "  munkalap: jelölt (horgony 5)",
+    "  ketoldalu-kereskedelmi-irat: kizárva (horgony 0, hiányzó kötelező: ['bizonylat'])",
+    "⚠ önellenőrzés BOMLIK — osszes ido = ciklusido x darabszam: total_time=40 vs cycle_time × quantity=30, eltérés 10 > tűrés 0.5"
+  ],
+  "needs_human": true
+}

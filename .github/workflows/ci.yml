@@ -35,6 +35,13 @@ jobs:
       # (2) szabad-e ra HIVATKOZNI (a pyproject alsó verzio-korlatja). A ketto nem
       # ugyanaz -- a surya-ocr 0.20.0 ELOTT GPL, attol Apache-2.0, tehat a licenc a
       # VERZIO tulajdonsaga.
+      # A `packaging` a marker-kiertekeleshez kell. A kapu SZANDEKOSAN hangosan
+      # bukik, ha nincs meg (nem esik vissza csendben egy gyengebb meresre) --
+      # es pontosan ezert allt PIROSAN a CI: a runneren nincs elore telepitve.
+      # A telepitese ezert a kapu ELOFELTETELE, nem a kapu gyengitese.
+      - name: A licenc-kapu elofeltetele (marker-kiertekeles)
+        run: python -m pip install --disable-pip-version-check packaging
+
       - name: Licenc-kapu (G5, negativ + pozitiv kontrollal)
         run: python tools/license_guard.py
 

@@ -11,6 +11,12 @@ build/
 # Uzleti binaris SOSEM kerul a repoba (bizonyitek-lanc: relativ ut + hash)
 input/
 samples/
+# ...DE a szerzodes aranypeldanyai NORMATIV artefaktumok, nem uzleti adat: a
+# DC-02 kontraktus-tesztje nelkuluk "vakon zold" lenne, es pontosan ez buktatta
+# a CI-t 2026-07-30 ota. A kivetel szuk: csak a JSON, es a lentebbi binaris-
+# mintak (*.pdf/*.xlsx/...) tovabbra is ervenyesek ezen a konyvtaron belul is.
+!contracts/samples/
+!contracts/samples/*.json
 *.pdf
 *.xlsx
 *.xlsm
