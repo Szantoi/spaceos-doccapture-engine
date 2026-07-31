@@ -35,15 +35,12 @@ jobs:
       # (2) szabad-e ra HIVATKOZNI (a pyproject alsó verzio-korlatja). A ketto nem
       # ugyanaz -- a surya-ocr 0.20.0 ELOTT GPL, attol Apache-2.0, tehat a licenc a
       # VERZIO tulajdonsaga.
-      # A `packaging` a marker-kiertekeleshez kell. A kapu SZANDEKOSAN hangosan
-      # bukik, ha nincs meg (nem esik vissza csendben egy gyengebb meresre) --
-      # es pontosan ezert allt PIROSAN a CI: a runneren nincs elore telepitve.
-      # A telepitese ezert a kapu ELOFELTETELE, nem a kapu gyengitese.
-      - name: A licenc-kapu elofeltetele (marker-kiertekeles)
-        run: python -m pip install --disable-pip-version-check packaging
-
-      - name: Licenc-kapu (G5, negativ + pozitiv kontrollal)
-        run: python tools/license_guard.py
+      # ⚠ A LEPES HELYE SZAMIT, es ezert nem itt all: a kapu azt meri, hogy ami
+      # TELEPITVE van, az megfelelo-e -- telepites elott tehat "2 deklaralt, 0
+      # megmerve"-t adna, es helyesen bukna ("egy nem mert fuggoseg nem
+      # rendben"). A helye az extrak telepitese UTAN van, ld. lentebb. Az 1. kor
+      # (fuggoseg-mentesseg) viszont csak telepites ELOTT ervenyes, ezert nem a
+      # licenc-kaput hoztuk elore, hanem azt vittuk hatra.
 
       # ------------------------------------------------------------------
       # 1. kor: FUGGOSEG NELKUL
@@ -67,6 +64,25 @@ jobs:
       # ------------------------------------------------------------------
       - name: A tablazatos es a dokumentum-extra telepitese
         run: python -m pip install --disable-pip-version-check ".[tabular,document]"
+
+      # A G5 (MIT licenc, Gabor 2026-07-30) fuggoseg-oldali kapuja -- ITT, mert a
+      # telepitett keszletet meri. A DC-01 felderitese kimerte, hogy ezt addig
+      # SEMMI nem orizte: az elso GPL-es fuggoseggel a szabaly meres nelkulive
+      # valt volna, es a suite ZOLD marad.
+      #
+      # A kapu KET kulon kerdest mer: (1) megfelelo-e, ami TELEPITVE van, es
+      # (2) szabad-e ra HIVATKOZNI (a pyproject also verzio-korlatja). A ketto nem
+      # ugyanaz -- a surya-ocr 0.20.0 ELOTT GPL, attol Apache-2.0, tehat a licenc a
+      # VERZIO tulajdonsaga.
+      #
+      # A `packaging` a marker-kiertekeleshez kell. A kapu SZANDEKOSAN hangosan
+      # bukik nelkule (nem esik vissza csendben egy gyengebb meresre), ezert a
+      # telepitese a kapu ELOFELTETELE, nem a kapu gyengitese.
+      - name: A licenc-kapu elofeltetele (marker-kiertekeles)
+        run: python -m pip install --disable-pip-version-check packaging
+
+      - name: Licenc-kapu (G5, negativ + pozitiv kontrollal)
+        run: python tools/license_guard.py
 
       - name: 2. kor — munkafuzet-ut (pozitiv kontrollal)
         run: python tools/measure_dependency_free.py --round workbook
