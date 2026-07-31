@@ -18,7 +18,7 @@ digitális és papír alapon. Ez a motor ezt a négyféle bemenetet fogadja, és
 | Bemenet | Amit teszünk | Modell kell? |
 |---|---|---|
 | Excel / CSV | oszlop-térképezés, típus-felismerés, validáció | **nem** — ez parse |
-| Digitális PDF | a meglévő szövegréteg kiolvasása | **nem** |
+| Digitális PDF | a meglévő szövegréteg kiolvasása | **nem** — kész |
 | Szkennelt kép / papír | raszter → szövegréteg (OCR) | részben |
 | Kézírás | vizuális átirat bizonytalanság-jelzéssel | igen |
 
@@ -238,12 +238,34 @@ minden jog fenntartott, tehát a fogyasztó jogszerűen nem is próbálhatná ki
 ## Állapot
 
 **A táblázatos út kész** (DC-01b): két adapter, közös domain-logika, mért
-kapukkal. A domain-modell és a semlegességi kapu áll. Következik a szövegréteges
-út, majd a felismerő és a kézírás.
+kapukkal. **A szövegréteges OLVASÁS is kész** (DC-01a): a digitális dokumentum
+meglévő szövegrétege geometriával együtt kiolvasható, háromállapotú
+használhatóság-verdikttel és fail-closed útválasztással. A domain-modell és a
+semlegességi kapu áll. Következik a kereshető PDF **írása**, majd a felismerő és
+a kézírás.
+
+```python
+from doccapture.core.config import CaptureConfig
+from doccapture.usecases.read_document_text import DocumentTextReader
+
+config = CaptureConfig(input_root="bemenet")
+eredmeny = DocumentTextReader(config).read("irat.pdf")
+
+eredmeny.lines          # olvasási sorrendben, determinisztikusan
+eredmeny.pages          # lap-geometria PONTBAN, bal-felső origóval
+eredmeny.evidence       # relatív út + `sha256:` tartalom-hash (M13)
+eredmeny.diagnostics    # pl. összeolvadás-gyanú megnevezett indokkal (M2)
+```
+
+A szövegréteges út a `document` extrát igényli (`pip install
+"doccapture-engine[document]"`); a mag és az elválasztott szöveges út továbbra
+is **függőség nélkül** működik, és ezt mérés őrzi.
 
 **Amit a motor ma NEM tud** — kimondva, hogy ne kelljen kitalálni: összevont
-cellák jelzése; szövegréteges és raszteres bemenet (a portok állnak, adapter
-nincs); egyoszlopos táblázat; teljesítmény nagy fájlon.
+cellák jelzése; **raszteres bemenet** (a port áll, adapter nincs); a **kereshető
+PDF írása**; a hasáb-**szétvágás** (az összeolvadás csak **jelezve** van, M2);
+elforgatott lap, vertikális szöveg és RTL írásrend; egyoszlopos táblázat;
+teljesítmény nagy fájlon.
 
 A motor korábbi, éles használatban kiforrott megoldásokból általánosít. Az
 átemelés elve: **mintaként, nem receptként** — ami egy konkrét rendszerre vagy

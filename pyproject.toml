@@ -16,6 +16,12 @@ dependencies = []
 # A munkafuzet-olvasas kulso csomagot igenyel, es ezt KIMONDVA kerjuk: a hiany
 # ertelmes hibauzenetet ad, nem import-hibat a semmibol.
 tabular = ["openpyxl>=3.1"]
+# A digitalis PDF szovegreteg-olvasasa. A nev NEM 'pdf': formatum-nev nem kerul
+# a publikus feluletre. A felso korlat NEM izles: minden meresunk a 4.30.0 /
+# libpdfium 6462 parosonkeszult, es az 5.x licenc-mezoje MAS ALAKU (masodkezbol
+# mert) -- korlat nelkul a CI olyan verziot telepitene, amin egyetlen meresunk
+# sem all. Emeles csak ujra-meressel (ld. tools/licenses.json _measured_notes).
+document = ["pypdfium2>=4.30,<5"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

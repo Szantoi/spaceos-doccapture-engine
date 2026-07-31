@@ -24,13 +24,13 @@ Ebben a modulban NINCS infrastruktúra-import (hexagonális határ).
 
 from __future__ import annotations
 
-import json
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
 from doccapture.core.errors import ConfigurationError
 from doccapture.core.models import InputKind
 from doccapture.core.tabular.options import TabularOptions
+from doccapture.core.text_layer_options import TextLayerOptions
 
 # Mezonevek, amik titkot sejtetnek. Nem a teljesseg a cel, hanem hogy a
 # leggyakoribb elirast (`api_key` a configba) gepi kapu fogja meg, ne review.
@@ -147,6 +147,14 @@ class CaptureConfig:
     egészt, és laposan szétszórva nem látszana, melyik melyikkel függ össze.
     """
 
+    # --- Szövegréteges út ---
+    text_layer: TextLayerOptions = field(default_factory=TextLayerOptions)
+    """A szövegréteg használhatóságának küszöbei (mikor megyünk ezen az úton).
+
+    Ugyanaz a minta, mint a `tabular`: beágyazott csomag, mert ezek együtt
+    alkotnak egy döntést — és a `validate()` rekurzívan végigkérdezi.
+    """
+
     # --- Bizonytalanság kezelése ---
     human_only_field_types: list[str] = field(default_factory=list)
     """Mezőtípusok, amiket NEM olvasunk gépileg, hanem emberi kitöltésre jelölünk.
@@ -186,7 +194,7 @@ class CaptureConfig:
     """
 
     # ------------------------------------------------------------------
-    # Perzisztálás
+    # Szerializálás — a fájlba írás/olvasás NEM itt van (ld. `from_dict`)
     # ------------------------------------------------------------------
 
     def to_dict(self) -> dict[str, Any]:
@@ -208,6 +216,7 @@ class CaptureConfig:
         """
         self.assert_no_secret_values()
         self.tabular.validate()
+        self.text_layer.validate()
 
         if self.allow_external_processing and not self.external_processing_audit_note.strip():
             raise ConfigurationError(
@@ -264,29 +273,20 @@ class CaptureConfig:
                     f"az érték a környezetből jöjjön."
                 )
 
-    def save(self, file_path: str) -> None:
-        """Kiírás JSON-ba. Titkot tartalmazó configot nem ír ki (fail-closed).
-
-        Az ellenőrzés SZÁNDÉKOSAN a fájl megnyitása ELŐTT fut. A `open(..., "w")`
-        ugyanis már létrehozza és nullára csonkolja a fájlt — ha utána bukna el
-        az ellenőrzés, egy meglévő, helyes configot veszítenénk el a bukás
-        mellékhatásaként. (Ezt a saját tesztünk fogta meg.)
-        """
-        payload = self.to_dict()
-        with open(file_path, "w", encoding="utf-8") as handle:
-            json.dump(payload, handle, ensure_ascii=False, indent=2)
-
     @classmethod
-    def load(cls, file_path: str) -> "CaptureConfig":
-        """Betöltés JSON-ból.
+    def from_dict(cls, data: dict[str, Any]) -> "CaptureConfig":
+        """Szótárból config — a szerializálás DOMAIN-tudása.
+
+        ⚠ **Ez a metódus szándékosan nem nyit fájlt.** A perzisztálás (honnan
+        jön a szótár) infrastruktúra: `infrastructure/config_store.py`. A
+        határt gépi kapu méri (`tests/test_core_boundary.py`), és a szétválasztás
+        pont ezt a metódust hagyja itt: **hogy** néz ki a szerializált alak, az
+        a domain kérdése; **hol tároljuk**, az nem.
 
         Az ismeretlen kulcsokat eldobja (régebbi fájlok miatt), de a
         kiterjesztés-útvonalakat visszaalakítja `InputKind`-dá — mert egy
         elgépelt bemenet-fajta induláskor derüljön ki, ne feldolgozás közben.
         """
-        with open(file_path, encoding="utf-8") as handle:
-            data = json.load(handle)
-
         known = cls.__dataclass_fields__.keys()
         filtered = {key: value for key, value in data.items() if key in known}
 
@@ -301,6 +301,14 @@ class CaptureConfig:
                     f"A `tabular` beállítás objektumot vár, nem {type(tabular).__name__}-t."
                 )
             filtered["tabular"] = TabularOptions.from_dict(tabular)
+
+        text_layer = filtered.get("text_layer")
+        if text_layer is not None:
+            if not isinstance(text_layer, dict):
+                raise ConfigurationError(
+                    f"A `text_layer` beállítás objektumot vár, nem {type(text_layer).__name__}-t."
+                )
+            filtered["text_layer"] = TextLayerOptions.from_dict(text_layer)
 
         routing = filtered.get("extension_routing")
         if routing is not None:

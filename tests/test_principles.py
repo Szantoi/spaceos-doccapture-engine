@@ -28,9 +28,16 @@ TESTS = REPO / "tests"
 
 # A tabla sorai: | **Mx** | leiras | kapu-allapot |
 _ROW = re.compile(r"^\|\s*\*\*(M\d+)\*\*\s*\|(.+?)\|([^|]*)\|\s*$", re.M)
+# ⚠ A toldalek SZAMFUGGO, es ezt a mero eszkoz elso valtozata nem tudta: a
+# minta konkretan a "2-t reszben, 3-at egyaltalan nem" alakra volt szabva.
+# Amikor az M2 allapota valtozott (3 reszben, 2 nem fedett), a HELYESEN irt
+# magyar mondat ("3-at reszben, 2-t egyaltalan nem") mar nem illeszkedett, es a
+# kapu ugy bukott el, hogy a doksi kozben igazat mondott.
+# A javitas iranya fontos: NEM a mondatot rontjuk el a minta kedveert (az a
+# mereshez igazitott valosag lenne), hanem a mintat tesszuk toldalek-turove.
 _SUMMARY = re.compile(
-    r"\*\*Mérve:\s*(\d+)\s*elvet fed gépi kapu,\s*(\d+)-t? részben,\s*(\d+)-at "
-    r"egyáltalán nem\*\*"
+    r"\*\*Mérve:\s*(\d+)\s*elvet fed gépi kapu,\s*(\d+)(?:-\w+)?\s*részben,\s*"
+    r"(\d+)(?:-\w+)?\s*egyáltalán nem\*\*"
 )
 
 

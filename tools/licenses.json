@@ -1,0 +1,132 @@
+{
+  "_comment": [
+    "A licenc-kapu szabalyhalmaza. A G5 dontes (Gabor, 2026-07-30) MIT licencet ir",
+    "elo, tehat a fuggoseg-lancnak MIT-kompatibilisnek kell lennie.",
+    "",
+    "A `denied` lista ELOBB fut, mint az `allowed`. Ez nem stilus: egy",
+    "'Dual Licensed - GNU AFFERO / commercial' szoveg MINDKETTORE illeszkedhet, es",
+    "ilyenkor a tiltas kell hogy nyerjen. Ugyanaz a precedencia-tanulsag, mint a",
+    "szivargas-kapunal: a biztonsagos minta nem mentesitheti a sort, ha ott a hiba is.",
+    "",
+    "A `license_floor` a legfontosabb szakasz, es egy FELOLDOTT ELLENTMONDAS",
+    "tanitotta. Ket fuggetlen felderito a TELEPITETT surya-ocr metaadatabol",
+    "GPL-3.0-or-later-t mert -- helyesen. A PyPI a legujabbra Apache-2.0-t mond --",
+    "szinten helyesen. Vegigmerve a verziokat:",
+    "    surya-ocr 0.1.0 .. 0.19.x  ->  GPL-3.0-or-later",
+    "    surya-ocr 0.20.0 -tol      ->  Apache-2.0",
+    "Vagyis a licenc a VERZIO tulajdonsaga, nem a csomage. A helyes szabaly nem",
+    "'a surya tilos', hanem 'a surya 0.20.0 alatt tilos' -- es ezt a pyproject",
+    "alsó verzio-korlatjaval kell kikenyszeriteni, kulonben a kovetkezo tiszta",
+    "telepites csendben behozza a GPL-es kiadast."
+  ],
+  "allowed": [
+    "MIT",
+    "MIT-CMU",
+    "BSD",
+    "Apache-2.0",
+    "Apache License 2.0",
+    "Apache Software License",
+    "ISC",
+    "Python Software Foundation",
+    "PSF",
+    "Zlib",
+    "HPND",
+    "Unlicense",
+    "CC0"
+  ],
+  "denied": [
+    "AGPL",
+    "AFFERO",
+    "GPL-2.0",
+    "GPL-3.0",
+    "GNU General Public License",
+    "GNU Lesser General Public License",
+    "LGPL",
+    "SSPL",
+    "Business Source",
+    "BUSL",
+    "Commons Clause",
+    "Proprietary",
+    "Elastic License"
+  ],
+  "license_floor": {
+    "surya-ocr": {
+      "min_version": "0.20.0",
+      "reason": "0.20.0 ELOTT GPL-3.0-or-later (merve a telepitett 0.17.1-en ES a PyPI-n), attol Apache-2.0"
+    }
+  },
+  "unmeasurable_accepted": {},
+  "_unmeasurable_accepted_pelda": {
+    "csomag-nev": "INDOK: hol es hogyan oldottuk fel kezzel (pl. a projekt LICENSE fajlja BSD-3-Clause, de a csomag metaadata ures). A dontes igy visszakereshető marad."
+  },
+  "_measured_notes": [
+    "MERVE a PyPI hiteles metaadatabol (info.license / info.license_expression /",
+    "License:: classifierek), 2026-07-30:",
+    "  pymupdf     1.28.0  -> 'Dual Licensed - GNU AFFERO ...'  => TILTOTT",
+    "  pypdfium2   5.12.1  -> BSD-3-Clause / Apache-2.0         => megengedett",
+    "  pypdf       6.14.2  -> BSD-3-Clause                      => megengedett",
+    "  pikepdf     10.10.0 -> MPL-2.0                           => FEL NEM ISMERT (dontes kell)",
+    "  reportlab   5.0.0   -> BSD                               => megengedett",
+    "  pillow      12.3.0  -> MIT-CMU                           => megengedett",
+    "  easyocr     1.7.2   -> Apache-2.0                        => megengedett",
+    "  paddleocr   3.7.0   -> Apache-2.0                        => megengedett",
+    "  surya-ocr   0.22.1  -> Apache-2.0  (de <0.20.0 GPL!)      => verzio-korlattal",
+    "  openpyxl    3.1.5   -> MIT                               => megengedett",
+    "",
+    "Az MPL-2.0 SZANDEKOSAN nincs egyik listan sem: fajl-szintu copyleft, tehat",
+    "MIT-terjesztesnel nem trivialis. A kapu ezert 'fel nem ismert'-kent buktatja el,",
+    "es a dontes KIMONDOTT lesz -- nem csendben megengedett.",
+    "",
+    "pypdfium2 FELSO korlat (<5) a pyprojectben, 2026-07-31 (DC-01a):",
+    "  a TELEPITETT 4.30.0 licence '(Apache-2.0 OR BSD-3-Clause) AND",
+    "  LicenseRef-PdfiumThirdParty' (License mezo, merve helyben); az 5.12.1",
+    "  PyPI-metaadata mas alaku (fent, masodkezbol). Minden geometriai meresunk",
+    "  (alul-nullas koordinata, charbox, get_rect) a 4.30.0/libpdfium 6462 paron",
+    "  keszult. A korlat emelese ujra-merest kovetel: licenc-mezo alak + a",
+    "  LicenseRef-PdfiumThirdParty tetel attribucio-KOTELES (FreeType/FTL-kredit,",
+    "  libjpeg-turbo/IJG) -- a 972 soros gyujto-fajl atolvasasa a `document` extra",
+    "  KIADASA elotti kotelezettseg, es a THIRD-PARTY-LICENSES tetelet az adja."
+  ],
+  "_selftest": {
+    "_comment": [
+      "A kapu bizonyitja, hogy HARAP (must_deny) es hogy NEM vaklarma (must_allow).",
+      "A harmadik lista azt meri, hogy az URES licencet NEM minositi rendben-nek:",
+      "a hallgatas nem 'megengedett'.",
+      "",
+      "⚠ A `must_deny` lista utolso negy eleme SZANDEKOSAN olyan szoveg, ami MINDKET",
+      "listara illeszkedik (pl. 'Apache-2.0 OR GPL-3.0-only'). Ezek merik a",
+      "PRECEDENCIAT. Az elso valtozatban csak a 'Dual Licensed - GNU AFFERO ...'",
+      "szerepelt -- es egy mutacio kimutatta, hogy AZ NEM merte a sorrendet: egyetlen",
+      "megengedo mintara sem illeszkedik, tehat a sorrend nala nem is szamit."
+    ],
+    "must_deny": [
+      "GPL-3.0-or-later",
+      "GNU General Public License v3 or later (GPLv3+)",
+      "AGPL-3.0",
+      "Dual Licensed - GNU AFFERO GPL 3.0 or commercial",
+      "LGPL-2.1-only",
+      "SSPL-1.0",
+      "Business Source License 1.1",
+      "Proprietary",
+      "Apache-2.0 OR GPL-3.0-only",
+      "MIT OR GPL-2.0-or-later",
+      "BSD-3-Clause OR LGPL-2.1",
+      "MPL-2.0 OR Apache-2.0 OR GPL-2.0"
+    ],
+    "must_allow": [
+      "MIT",
+      "MIT License",
+      "MIT-CMU",
+      "BSD-3-Clause",
+      "BSD license (see license.txt for details)",
+      "Apache-2.0",
+      "Apache License 2.0",
+      "Apache Software License",
+      "ISC"
+    ],
+    "must_be_unmeasurable": [
+      "",
+      "   "
+    ]
+  }
+}

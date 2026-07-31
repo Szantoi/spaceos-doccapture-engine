@@ -62,7 +62,7 @@ megsérül** — és pont az ilyen sérülés marad csendben, mert a kód továb
 | # | Elv | Gépi kapu ma |
 |---|---|---|
 | **M1** | **Horgony-fél és ellenfél.** Egy kétoldalú iraton az egyik fél állandó (mi vagyunk), a másik változó. A horgonyt **stabil azonosítóval** ismerd fel (adószám, regisztrációs szám — konfigurációból). **Ne névre illessz:** a név elírható, az azonosító nem. | részben — a profil-horgony **kötelező**, horgony nélküli profil elbukik |
-| **M2** | **Összeolvadó oszlopok.** Hasábos elrendezésnél a szövegréteg gyakran **egy sorba olvasztja** a két hasábot. A megoldás nem jobb felismerés, hanem **vágás a horgony-tokennél**. | ⚠ **nincs** — a hasáb-szétvágás nincs megírva (DC-01) |
+| **M2** | **Összeolvadó oszlopok.** Hasábos elrendezésnél a szövegréteg gyakran **egy sorba olvasztja** a két hasábot. A megoldás nem jobb felismerés, hanem **vágás a horgony-tokennél**. | részben — az összeolvadás **jelezve** (`core/columns.py`, hamis-riasztási kontrollal); a **szétvágás nincs megírva**, mert a horgony profil-adat (M1) |
 | **M3** | **Redundancia = ingyen ellenőrzés.** Az üzleti iratok tele vannak önellenőrző számtannal. Ha nem stimmel (tűréssel), **jelöld — ne javítsd csendben**. *A hiba visszafejthető abból, melyik egyenlőség bomlik el.* | ✅ `ConsistencyRule` + mutáció |
 | **M4** | **Válaszd a hibára legkevésbé érzékeny bemenetet.** Ha egy érték több úton is kiszámolható, azt az utat vedd, amelyik **nem függ a törékeny mezőtől**. | ✅ származtatás, és a származtatott érték **soha nem `CONFIRMED`** |
 | **M5** | **Növekvő megfeleltetési tábla.** A külső fél a **saját szavaival** ír, mi a **saját kódjainkkal** dolgozunk. A kettő közé tábla kell, ami a **jóváhagyásból nő**. | részben — a séma/profil **adat**, körútja mérve; a tábla növése a fogyasztóé |
@@ -77,10 +77,17 @@ megsérül** — és pont az ilyen sérülés marad csendben, mert a kód továb
 | **M14** | **Egy munka-azonosító = egy entitás.** Az összevonás **nem** történhet gyengébb egyezés alapján. A hamis összevonás **visszafordíthatatlan**. | ⚠ **nincs** — a motor nem von össze entitást; ez a fogyasztó felelőssége |
 | **M15** | **Az egységet előbb megőrizzük**, a konverzió **explicit és naplózott**. Amíg nem tudjuk biztosan az eredeti mértékegységet, ne normalizáljunk. | ✅ a fejlécből felismert egység **adat** bizonyítékkal; átváltás nincs |
 
-**Mérve: 10 elvet fed gépi kapu, 2-t részben, 3-at egyáltalán nem** (M2, M9,
-M14). A nem fedett három **nem elfelejtett**, hanem olyan réteghez tartozik, ami
-még nincs megírva — és ezt jobb kimondani, mint „elvnek" nevezni valamit, amit
+**Mérve: 10 elvet fed gépi kapu, 3-at részben, 2-t egyáltalán nem** (M9, M14).
+A nem fedett kettő **nem elfelejtett**, hanem olyan réteghez tartozik, ami még
+nincs megírva — és ezt jobb kimondani, mint „elvnek" nevezni valamit, amit
 semmi nem őriz.
+
+> **Az M2 2026-07-31-én `nincs` → `részben` lett (DC-01a).** Ami elkészült: az
+> összeolvadás **jelzése**, megnevezett indokkal és mért aránnyal, hamis-riasztási
+> kontrollal együtt. Ami **nem**: a szétvágás. A `✅` szándékosan kimarad — ahol
+> a hasábok egy futamban jönnek, a köztük lévő rés a szövegből már elveszett, és
+> az egyetlen megbízható vágópont a horgony-token, ami **profil-adat** (M1). Egy
+> elrendezés-szintű vágó-szabály két igazságot teremtene ugyanarról.
 
 > ⚠ **Ez a három szám kapuval kötött a fenti táblához** (`tests/test_principles.py`).
 > Az első leírásnál elszámoltam (9/3/3 helyett 10/2/3), és pontosan ez a fajta

@@ -16,6 +16,7 @@ from pathlib import Path
 from doccapture.core.config import CaptureConfig
 from doccapture.core.errors import ConfigurationError
 from doccapture.core.models import InputKind
+from doccapture.infrastructure.config_store import load_config, save_config
 
 
 class SecretLeakTests(unittest.TestCase):
@@ -55,7 +56,7 @@ class SecretLeakTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp, "config.json")
             with self.assertRaises(ConfigurationError):
-                config.save(str(target))
+                save_config(config, str(target))
             self.assertFalse(target.exists(), "A fajl letrejott, pedig el kellett volna buknia.")
 
 
@@ -135,8 +136,8 @@ class NestedOptionsTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp, "config.json")
-            config.save(str(target))
-            loaded = CaptureConfig.load(str(target))
+            save_config(config, str(target))
+            loaded = load_config(str(target))
 
         from doccapture.core.tabular.options import TabularOptions
 
@@ -153,14 +154,14 @@ class NestedOptionsTests(unittest.TestCase):
                 json.dumps({"tabular": {"header_row": 0}}), encoding="utf-8"
             )
             with self.assertRaises(ConfigurationError):
-                CaptureConfig.load(str(target))
+                load_config(str(target))
 
     def test_a_nem_objektum_tipusu_beallitas_kimondott_hiba(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp, "config.json")
             target.write_text(json.dumps({"tabular": "igen"}), encoding="utf-8")
             with self.assertRaises(ConfigurationError):
-                CaptureConfig.load(str(target))
+                load_config(str(target))
 
 
 class RoutingTests(unittest.TestCase):
@@ -178,8 +179,8 @@ class RoundTripTests(unittest.TestCase):
         config = CaptureConfig(input_root="forras", retry_attempts=7)
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp, "config.json")
-            config.save(str(target))
-            loaded = CaptureConfig.load(str(target))
+            save_config(config, str(target))
+            loaded = load_config(str(target))
 
         self.assertEqual(loaded.input_root, "forras")
         self.assertEqual(loaded.retry_attempts, 7)
@@ -194,7 +195,7 @@ class RoundTripTests(unittest.TestCase):
                 encoding="utf-8",
             )
             with self.assertRaises(ConfigurationError):
-                CaptureConfig.load(str(target))
+                load_config(str(target))
 
 
 if __name__ == "__main__":

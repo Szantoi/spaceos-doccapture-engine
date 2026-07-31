@@ -10,8 +10,25 @@
     "adna.",
     "",
     "A 'not_covered' szakasz azt nevezi meg, amit EGYIK mutacio SEM fed. A",
-    "mutacio az erzekenyseget bizonyitja, nem a lefedettseget."
+    "mutacio az erzekenyseget bizonyitja, nem a lefedettseget.",
+    "",
+    "MUTACIO-FAJTAK:",
+    "  (alapeset)      'find'/'replace' -- szoveg-csere; sorveg-fuggetlenul illeszt",
+    "  kind='create'   'content' -- FAJL-LETREHOZAS; a visszaallitas a fajl torlese.",
+    "                  Azert kell, mert nehany kapu FAJL-LISTAT vizsgal (pkgutil),",
+    "                  tehat szoveg-cserevel nem lehet elrontani."
   ],
+  "runner": {
+    "command": [
+      "{python}",
+      "-m",
+      "unittest",
+      "{test}"
+    ],
+    "env": {
+      "PYTHONPATH": "src"
+    }
+  },
   "mutations": [
     {
       "name": "hatar-kapu: infrastruktura-import a MAG uj alcsomagjaba",
@@ -116,6 +133,110 @@
       "find": "    if isinstance(value, bool):\n        return value, \"boolean\"",
       "replace": "    if False:  # MUTACIO\n        return value, \"boolean\"",
       "test": "tests.test_contract"
+    },
+    {
+      "name": "G2-hatar: szamla-specifikus USE-CASE a motorban",
+      "asserts": "ADR-071 D2 -- a dontesi oldal nem szivarog be a fazis-retegbe",
+      "kind": "create",
+      "file": "src/doccapture/usecases/invoice_matching.py",
+      "content": "\"\"\"MUTACIO -- becsempeszett szamla-specifikus use-case.\"\"\"\n",
+      "test": "tests.test_load_tabular"
+    },
+    {
+      "name": "G2-hatar: a rekord PAROSITAST is tartalmaz",
+      "asserts": "ADR-071 D1 -- az olvasas kimenete nem 'dont'; nincs parositas/atvaltas",
+      "file": "src/doccapture/usecases/analyze_document.py",
+      "find": "        fields.update(checked)",
+      "replace": "        fields.update(checked)\n        fields[\"matched_internal_code\"] = detection.profile  # MUTACIO",
+      "test": "tests.test_analyze_document"
+    },
+    {
+      "name": "szarmaztatott ertek MEGERositettnek latszik",
+      "asserts": "ADR-071 D1 -- a szamitott ertek nem lehet megkulonboztethetetlen a leolvasottol",
+      "file": "src/doccapture/core/documents/consistency.py",
+      "find": "        confidence=Confidence.NEEDS_REVIEW,\n        evidence=item.evidence if item is not None else None,",
+      "replace": "        confidence=Confidence.CONFIRMED,  # MUTACIO\n        evidence=item.evidence if item is not None else None,",
+      "test": "tests.test_document_consistency"
+    },
+    {
+      "name": "licenc-kapu: a MEGENGEDO lista fut a TILTO elott",
+      "asserts": "precedencia -- a 'Dual Licensed - GNU AFFERO / commercial' mindkettore illeszkedik, es a TILTAS kell hogy nyerjen",
+      "file": "tools/license_guard.py",
+      "find": "    for pattern in config[\"denied\"]:\n        if pattern.lower() in lowered:\n            return \"tiltott\"\n    for pattern in config[\"allowed\"]:\n        if pattern.lower() in lowered:\n            return \"megengedett\"",
+      "replace": "    for pattern in config[\"allowed\"]:  # MUTACIO: felcserelt precedencia\n        if pattern.lower() in lowered:\n            return \"megengedett\"\n    for pattern in config[\"denied\"]:\n        if pattern.lower() in lowered:\n            return \"tiltott\"",
+      "test": "tests.test_license_guard"
+    },
+    {
+      "name": "licenc-kapu: a hianyzo verzio-korlat NEM hiba",
+      "asserts": "a licenc a VERZIO tulajdonsaga -- korlat nelkul a kovetkezo tiszta telepites behozza a GPL-es kiadast",
+      "file": "tools/license_guard.py",
+      "find": "        if not floors:\n            problems.append(",
+      "replace": "        if False:  # MUTACIO\n            problems.append(",
+      "test": "tests.test_license_guard"
+    },
+    {
+      "name": "licenc-kapu: a NEM TELEPITETT fuggoseg csendben kimarad",
+      "asserts": "egy nem mert fuggoseg NEM 'rendben' -- a hallgatas nem zold",
+      "file": "tools/license_guard.py",
+      "find": "    if missing:\n        problems = True",
+      "replace": "    if missing:\n        problems = False  # MUTACIO",
+      "test": "tests.test_license_guard"
+    },
+    {
+      "name": "licenc-kapu: a marker-feltetel LEVAGASA (a zaj visszaterese)",
+      "asserts": "a zarvany-bejaras marker-kiertekelest hasznal -- levagas nelkul 77 hamis 'nem mertem' jonne (merve), es a zajos kaput kikapcsoljak",
+      "file": "tools/license_guard.py",
+      "find": "    if parsed.marker is None:\n        return True",
+      "replace": "    if True:  # MUTACIO: minden kovetelmeny futasideju\n        return True",
+      "test": "tests.test_license_guard"
+    },
+    {
+      "name": "DC-01a K3: a ketertelmu szovegreteg atcsuszik IGENbe",
+      "asserts": "a verdikt fail-closed: CSAK a USABLE az igen, a ketertelmu nem",
+      "file": "src/doccapture/infrastructure/textlayer/probe.py",
+      "find": "        return self.verdict is TextLayerVerdict.USABLE",
+      "replace": "        return self.verdict is not TextLayerVerdict.ABSENT  # MUTACIO",
+      "test": "tests.test_text_layer"
+    },
+    {
+      "name": "DC-01a K4: index szerinti naiv koordinata-atvetel (lap fejjel lefele)",
+      "asserts": "a kapu a TENYLEGES poziciot meri, nem csak az invarians fennallasat",
+      "file": "src/doccapture/infrastructure/textlayer/reader.py",
+      "find": "                            y_top=height - float(y_high),",
+      "replace": "                            y_top=float(y_low),  # MUTACIO",
+      "test": "tests.test_text_layer"
+    },
+    {
+      "name": "DC-01a K5: FABRIKALT x_right (x_left + 1)",
+      "asserts": "a kapu a konyvtar get_rect jobb szelehez meri, nem 'nem None'-t nez",
+      "file": "src/doccapture/infrastructure/textlayer/reader.py",
+      "find": "                            x_right=float(x_right),",
+      "replace": "                            x_right=float(x_left) + 1.0,  # MUTACIO",
+      "test": "tests.test_text_layer"
+    },
+    {
+      "name": "DC-01a K6: az M2-detektor MINDEN fragmensre szol",
+      "asserts": "a hamis-riasztasi kontroll EL: a szetvalt hasabokon nem szolalhat meg",
+      "file": "src/doccapture/core/columns.py",
+      "find": "        if span_ratio >= options.merged_span_ratio:",
+      "replace": "        if span_ratio >= 0.0:  # MUTACIO",
+      "test": "tests.test_columns"
+    },
+    {
+      "name": "DC-01a: az olvasasi sorrend elveszti a determinizmusat",
+      "asserts": "dontetlen geometrianal is STABIL a sorrend (nem a bemeneti listan mulik)",
+      "file": "src/doccapture/core/columns.py",
+      "find": "        key=lambda f: (f.y_top, f.x_left, f.y_bottom, f.x_right, f.text),",
+      "replace": "        key=lambda f: (f.y_top,),  # MUTACIO",
+      "test": "tests.test_columns"
+    },
+    {
+      "name": "DC-01a K8: a MAG fajlt nyit (stdlib open, import-kapu nem fogja)",
+      "asserts": "a hatar-kapu a fajlrendszer-hozzaferest is meri, nem csak az importokat",
+      "file": "src/doccapture/core/text_layer_options.py",
+      "find": "    def validate(self) -> None:",
+      "replace": "    def _mutacio(self):\n        return open('valami.bin', 'rb')  # MUTACIO\n\n    def validate(self) -> None:",
+      "test": "tests.test_core_boundary"
     }
   ],
   "not_covered": [
@@ -124,7 +245,13 @@
     "max_rows csonkolas-jelzes",
     "a bizonyitek-lanc hash-elese es a fajlonkenti egyszeri hasheles",
     "a mertekegyseg fejlecbol kinyerese (unit:<kulcs> mezo)",
-    "a semlegessegi kapu szokeszlete (annak sajat onteszte van)",
-    "a kereszt-repo szerzodes-drift (CI-lepes, a motor publikalasat igenyli)"
+    "a semlegessegi kapu szokeszlete (NINCS onteszte -- merve: a --selftest kapcsolo nem letezik, es a neutrality.json-ban nincs must_catch/must_pass; ez ADOSSAG, nem lefedettseg)",
+    "a kereszt-repo szerzodes-drift (CI-lepes, a motor publikalasat igenyli)",
+    "a MODELL-SULYOK licence (a pip-csomag licence NEM a sulyok licence) -- merhetetlen",
+    "a licenc-szoveg jogi ertelmezese hataresetben (pl. MPL-2.0 fajl-szintu copyleft)",
+    "DC-01a: elforgatott lap, vertikalis szoveg, RTL irasrend (egyik fixture sem fedi)",
+    "DC-01a: valodi eles iraton mert hasab-talalati es hamis-riasztasi arany (csak kezzel irt fixture-ok)",
+    "DC-01a: a betutipus-lanc (DC-01b szelet -- ott harom kulonbozo hibaalak, ld. a tervet)",
+    "DC-01a: a pypdfium2 5.x viselkedese es licenc-mezo alakja (a felso korlat epp ezt zarja ki)"
   ]
 }

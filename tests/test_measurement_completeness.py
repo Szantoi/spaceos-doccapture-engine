@@ -20,12 +20,16 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "tools"))
 
-from measure_dependency_free import DEPENDENCY_FREE_MODULES  # noqa: E402
-
-# A munkafuzet-extrat igenylo modulok. KIMONDVA, nem kikovetkeztetve: ha egy modul
-# `skipUnless`-szel vedett, azt itt kell nevesiteni, kulonben a kihagyasa csendben
-# uresen zold szamlalot adna.
-WORKBOOK_DEPENDENT_MODULES = ("tests.test_tabular_workbook",)
+# ⚠ MINDHAROM kor-lista az ESZKOZBOL jon, nem itt all literalkent. A koroket a
+# `measure_dependency_free.py` futtatja, tehat a felosztas forras-igazsaga ott
+# van; ha itt masolat allna, ket kulonbozo tudas lenne ugyanarrol, es a kapu
+# eppen azt a fajta elcsuszast nem venne eszre, ami ellen ved.
+# (A DC-01a elott a munkafuzet-lista MEG itt allt, es az eszkoz nem tudott rola.)
+from measure_dependency_free import (  # noqa: E402
+    DEPENDENCY_FREE_MODULES,
+    DOCUMENT_DEPENDENT_MODULES,
+    WORKBOOK_DEPENDENT_MODULES,
+)
 
 
 def _discovered_modules() -> set[str]:
@@ -43,8 +47,9 @@ class MeasurementCompletenessTests(unittest.TestCase):
 
         free = set(DEPENDENCY_FREE_MODULES)
         workbook = set(WORKBOOK_DEPENDENT_MODULES)
+        document = set(DOCUMENT_DEPENDENT_MODULES)
 
-        kimaradt = discovered - free - workbook
+        kimaradt = discovered - free - workbook - document
         self.assertEqual(
             kimaradt,
             set(),
@@ -52,25 +57,40 @@ class MeasurementCompletenessTests(unittest.TestCase):
             f"A 'fuggoseg nelkul N zold' szam igy nem fedi, amit fedni latszik.",
         )
 
-        mindkettoben = free & workbook
-        self.assertEqual(
-            mindkettoben,
-            set(),
-            f"teszt-modul MINDKET korben szerepel: {sorted(mindkettoben)} — "
-            f"ket igazsag ugyanarrol a szamrol.",
-        )
+        # Minden KOR-PART megvizsgalunk: harom kornel a `free & workbook`
+        # egymagaban ket atfedest CSENDBEN atengedne.
+        korok = {"fuggoseg-mentes": free, "munkafuzet": workbook, "dokumentum": document}
+        nevek = sorted(korok)
+        for i, egyik in enumerate(nevek):
+            for masik in nevek[i + 1 :]:
+                atfedes = korok[egyik] & korok[masik]
+                self.assertEqual(
+                    atfedes,
+                    set(),
+                    f"teszt-modul a(z) {egyik!r} ES a(z) {masik!r} korben is "
+                    f"szerepel: {sorted(atfedes)} — ket igazsag ugyanarrol a szamrol.",
+                )
 
     def test_a_listak_nem_hivatkoznak_NEM_LETEZO_modulra(self) -> None:
         """Egy elavult bejegyzes a listaban ertelmezhetetlen hibat adna a CI-ban."""
         discovered = _discovered_modules()
-        for module in (*DEPENDENCY_FREE_MODULES, *WORKBOOK_DEPENDENT_MODULES):
+        for module in (
+            *DEPENDENCY_FREE_MODULES,
+            *WORKBOOK_DEPENDENT_MODULES,
+            *DOCUMENT_DEPENDENT_MODULES,
+        ):
             with self.subTest(module=module):
                 self.assertIn(module, discovered, "elavult bejegyzes a meresi listaban")
 
     def test_a_kapu_HARAP_negativ_kontroll(self) -> None:
         """Egy kitalalt uj teszt-modul kimaradasa elbukna."""
         discovered = _discovered_modules() | {"tests.test_jovobeli_uj_modul"}
-        kimaradt = discovered - set(DEPENDENCY_FREE_MODULES) - set(WORKBOOK_DEPENDENT_MODULES)
+        kimaradt = (
+            discovered
+            - set(DEPENDENCY_FREE_MODULES)
+            - set(WORKBOOK_DEPENDENT_MODULES)
+            - set(DOCUMENT_DEPENDENT_MODULES)
+        )
         kimaradt.discard("tests.test_measurement_completeness")
         self.assertEqual(kimaradt, {"tests.test_jovobeli_uj_modul"})
 

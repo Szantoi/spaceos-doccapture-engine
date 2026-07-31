@@ -27,6 +27,17 @@ jobs:
       - name: Kontraktus hash-pin
         run: python tools/contract_pin.py
 
+      # A G5 (MIT licenc, Gabor 2026-07-30) fuggoseg-oldali kapuja. A DC-01
+      # felderitese kimerte, hogy ezt addig SEMMI nem orizte: az elso GPL-es
+      # fuggoseggel a szabaly mereses nelkulive valt volna, es a suite ZOLD marad.
+      #
+      # A kapu KET kulon kerdest mer: (1) megfelelo-e, ami TELEPITVE van, es
+      # (2) szabad-e ra HIVATKOZNI (a pyproject alsó verzio-korlatja). A ketto nem
+      # ugyanaz -- a surya-ocr 0.20.0 ELOTT GPL, attol Apache-2.0, tehat a licenc a
+      # VERZIO tulajdonsaga.
+      - name: Licenc-kapu (G5, negativ + pozitiv kontrollal)
+        run: python tools/license_guard.py
+
       # ------------------------------------------------------------------
       # 1. kor: FUGGOSEG NELKUL
       #
@@ -39,21 +50,22 @@ jobs:
         run: python tools/measure_dependency_free.py
 
       # ------------------------------------------------------------------
-      # 2. kor: A TELJES suite, a munkafuzet-extraval
+      # 2. es 3. kor: az EXTRAT igenylo utak
+      #
+      # Mindket kor sajat POZITIV kontrollal indul: kimondva ellenorzi, hogy a
+      # fuggosege megvan. Enelkul egy elszallt telepites utan a `skipUnless`-szel
+      # vedett tesztek CSENDBEN kimaradnanak, es a suite ZOLD lenne — uresen zold
+      # szamlalo. A kontrollt maga a mero eszkoz vegzi (`--round`), tehat nem
+      # csuszhat el a listatol, amit futtat.
       # ------------------------------------------------------------------
-      - name: A tablazatos extra telepitese
-        run: python -m pip install --disable-pip-version-check ".[tabular]"
+      - name: A tablazatos es a dokumentum-extra telepitese
+        run: python -m pip install --disable-pip-version-check ".[tabular,document]"
 
-      # A munkafuzet-tesztek `skipUnless`-szel vannak vedve. Ha az extra
-      # telepitese elszall, azok CSENDBEN kimaradnanak, es a suite ZOLD lenne --
-      # egy uresen zold szamlalo. Ezert itt kimondva ellenorizzuk, hogy a
-      # fuggoseg megvan, MIELOTT a "mind zold" szamot barmire hasznalnank.
-      - name: A munkafuzet-ut fuggosege megvan (nema kihagyas ellen)
-        run: |
-          python - <<'PY'
-          import openpyxl
-          print("openpyxl", openpyxl.__version__)
-          PY
+      - name: 2. kor — munkafuzet-ut (pozitiv kontrollal)
+        run: python tools/measure_dependency_free.py --round workbook
+
+      - name: 3. kor — szovegreteges ut (pozitiv kontrollal)
+        run: python tools/measure_dependency_free.py --round document
 
       - name: Teljes suite
         env:
