@@ -25,3 +25,13 @@ document = ["pypdfium2>=4.30,<5"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+# A SZALLITOTT eroforrasok. ⚠ Enelkul a betutipus a repoban ott van, a
+# TELEPITETT csomagban viszont NINCS -- es a termek a telepites utan nemán rossz
+# kimenetet adna (az ekezet lathatatlan szovegben romlik el). Ugyanaz a
+# tanulsag, mint a LICENSE-nel: egy fajl a repoban nem jut el a fogyasztohoz.
+#
+# Az OFL-1.1 a licenc TOVABBADASAT is kotelezove teszi, tehat a `LICENSE-*.txt`
+# nem kenyelmi masolat, hanem jogi kotelezettseg -- ezert all ugyanitt.
+[tool.setuptools.package-data]
+"doccapture.resources" = ["*.ttf", "LICENSE-*.txt"]

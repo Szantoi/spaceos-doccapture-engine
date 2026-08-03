@@ -14,3 +14,17 @@ contracts/** -text
 # Ugyanez a JSON-adatra, ami hasheles ala eshet (profil-leirasok, aranypeldanyok).
 *.schema.json -text
 *.pin.json -text
+
+# A SZALLITOTT BINARIS ARTEFAKTUMOK (ma: a beagyazando betutipus es a licence).
+#
+# ⚠ Ket kulon okbol kell ide, es MINDKETTO valodi:
+#  1. a betutipus sha256-tal PINNELT (tools/binary_artifacts.json) -- egy
+#     sorveg-fordulas a pint elbuktatna a CI-n, mikozben a gepen zold marad;
+#  2. a `.ttf` BINARIS: a git rendszerint felismeri (NUL-bajtok alapjan) es
+#     bekeni hagyja, de ez HEURISZTIKA. Egy heurisztikara nem bizzuk egy
+#     szallitott artefaktum epseget -- kimondjuk.
+#
+# A licenc-szoveg azert all itt, mert az is HASH-PINNELT: az OFL-1.1 tovabbadasa
+# kotelezettseg, tehat a fajl tartalma sem sodrodhat el eszrevetlenul.
+src/doccapture/resources/*.ttf -text
+src/doccapture/resources/LICENSE-*.txt -text

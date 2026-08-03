@@ -52,6 +52,10 @@ DEPENDENCY_FREE_MODULES = (
     "tests.test_contract",
     "tests.test_measurement_completeness",
     "tests.test_columns",
+    # A binaris-artefaktum kapu fuggoseg-mentes: a betutipust sajat, stdlib-only
+    # cmap-olvasoval meri (`struct`), eppen azert, hogy a MERES ne fuggjon attol,
+    # telepitve van-e barmilyen font-konyvtar.
+    "tests.test_binary_artifacts",
 )
 
 # ⚠ A blokkolo-lista MINDEN opcionalis csomagot fedjen. Ha egy uj extra csomagja

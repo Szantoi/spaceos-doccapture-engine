@@ -33,6 +33,20 @@ jobs:
       - name: Semlegessegi kapu
         run: python tools/neutrality_guard.py
 
+      # A SZALLITOTT BINARIS artefaktumok kapuja. Ket kulon rest zar be, es
+      # mindkettot meres hozta elo:
+      #  1. binaris-oldalon NEM volt semmilyen kapu -- a .gitignore csak nehany
+      #     konkret kiterjesztest tilt, ami FELSOROLAS, nem szabaly: egy .ttf,
+      #     .zip vagy egy atnevezett uzleti minta CSENDBEN bemegy egy PUBLIKUS repoba;
+      #  2. a licenc-kapu (G5) csak pip-csomagokat lat, tehat egy szallitott
+      #     NEM-pip artefaktum (a beagyazott betutipus) licence meres nelkul maradna.
+      #
+      # A kapu a betutipust meg is MERI (glyph-fedes + fsType), mert a fajl
+      # JELENLETE nem bizonyitja a HASZNALHATOSAGAT -- a beepitett Helvetica
+      # nemán rombolja az ekezetet, es a hiba LATHATATLAN szovegben van.
+      - name: Binaris-artefaktum kapu
+        run: python tools/binary_guard.py
+
       # A PUBLIKALT szerzodes hash-pinje. Ha a sema valtozik es a pin nem, ez
       # elbukik -- a verzio-emeles KIMONDOTT lepes, nem mellekhatas. A kapu azt is
       # ellenorzi, hogy a HAROM helyen allo verzio (sema $id, pin, szerializalo)

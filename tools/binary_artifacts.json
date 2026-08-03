@@ -1,0 +1,38 @@
+{
+  "_comment": "SZALLITOTT BINARIS ARTEFAKTUMOK -- deklaralt engedelyezo-lista. Ami itt nincs, az NEM kerulhet a repoba: a repo PUBLIKUS, es a sajat szabalyunk kimondja, hogy uzleti binaris SOSEM kerul be. A licenc-kapu (G5) csak pip-csomagokat lat, tehat a NEM-pip artefaktumok licence e nelkul a manifeszt nelkul MERES NELKUL maradna.",
+  "_hogyan": "Uj artefaktum: ird le ide (ut, sha256, licenc, eredet), tedd a .gitattributes ala `-text`-kent, es futtasd: python tools/binary_guard.py",
+  "artifacts": [
+    {
+      "path": "src/doccapture/resources/LiberationSans-Regular.ttf",
+      "sha256": "76d04c18ea243f426b7de1f3ad208e927008f961dc5945e5aad352d0dfde8ee8",
+      "bytes": 410712,
+      "license": "OFL-1.1",
+      "license_file": "src/doccapture/resources/LICENSE-LiberationSans.txt",
+      "reserved_font_name": "Liberation",
+      "origin_project": "liberationfonts/liberation-fonts",
+      "origin_release": "2.1.5",
+      "origin_released_at": "2021-09-30",
+      "origin_url": "https://github.com/liberationfonts/liberation-fonts/files/7261482/liberation-fonts-ttf-2.1.5.tar.gz",
+      "origin_archive_sha256": "7191c669bf38899f73a2094ed00f7b800553364f90e2637010a69c0e268f25d0",
+      "why": "A kereshető PDF beagyazott betutipust igenyel. A beepitett Helvetica NEMAN rombolja az ekezetet, es a hiba LATHATATLAN szovegben van."
+    },
+    {
+      "path": "src/doccapture/resources/LICENSE-LiberationSans.txt",
+      "sha256": "93fed46019c38bbe566b479d22148e2e8a1e85ada614accb0211c37b2c61c19b",
+      "bytes": 4414,
+      "license": "OFL-1.1",
+      "license_file": "src/doccapture/resources/LICENSE-LiberationSans.txt",
+      "origin_project": "liberationfonts/liberation-fonts",
+      "origin_release": "2.1.5",
+      "origin_released_at": "2021-09-30",
+      "origin_url": "https://github.com/liberationfonts/liberation-fonts/files/7261482/liberation-fonts-ttf-2.1.5.tar.gz",
+      "origin_archive_sha256": "7191c669bf38899f73a2094ed00f7b800553364f90e2637010a69c0e268f25d0",
+      "why": "Az OFL-1.1 KOTELEZOVE teszi a licenc tovabbadasat a fonttal egyutt."
+    }
+  ],
+  "_not_covered": [
+    "a licenc-szoveg jogi ertelmezese (a kapu SPDX-azonositot es fajl-jelenletet mer)",
+    "a betutipus VIZUALIS minosege es a hinting -- csak a glyph-fedest merjuk",
+    "a modositott szarmazek atnevezesi kotelezettsege (Reserved Font Name): ma NEM modositunk fontot, tehat nincs mit merni; ha valaha modositunk, ez KAPUT igenyel"
+  ]
+}

@@ -277,6 +277,38 @@
       "find": "dependencies = []",
       "replace": "# forras: /home/valaki/motor  # MUTACIO\ndependencies = []",
       "test": "tests.test_source_hygiene"
+    },
+    {
+      "name": "binaris-kapu: a NEM DEKLARALT binaris csendben atmegy",
+      "asserts": "a repoba kerulo binaris deklaraciot igenyel -- a .gitignore csak nehany kiterjesztest tilt, ami FELSOROLAS, nem szabaly",
+      "file": "tools/binary_guard.py",
+      "find": "        if rel not in declared:",
+      "replace": "        if False:  # MUTACIO",
+      "test": "tests.test_binary_artifacts"
+    },
+    {
+      "name": "binaris-kapu: a betutipus glyph-fedeset nem meri (csak a jelenletet)",
+      "asserts": "a fajl JELENLETE nem bizonyitja a HASZNALHATOSAGAT -- a beepitett Helvetica nemán rombolja az ekezetet, es a hiba LATHATATLAN szovegben van",
+      "file": "tools/binary_guard.py",
+      "find": "            if report[\"missing\"]:",
+      "replace": "            if False:  # MUTACIO",
+      "test": "tests.test_binary_artifacts"
+    },
+    {
+      "name": "binaris-kapu: a cmap-olvaso MINDEN karaktert megtalaltnak mond",
+      "asserts": "a POZITIV KONTROLL el: egy mindig-igent-mondo mérőeszköz megkulonboztethetetlen attol, amelyik el sem indul",
+      "file": "tools/binary_guard.py",
+      "find": "        return 0\n\n    return glyph_for",
+      "replace": "        return 1  # MUTACIO\n\n    return glyph_for",
+      "test": "tests.test_binary_artifacts"
+    },
+    {
+      "name": "csomagolas: az eroforrasok kimaradnak a TELEPITETT csomagbol",
+      "asserts": "a betutipus eljut a FOGYASZTOHOZ -- egy fajl a repoban nem csomag-tartalom",
+      "file": "pyproject.toml",
+      "find": "\"doccapture.resources\" = [\"*.ttf\", \"LICENSE-*.txt\"]",
+      "replace": "\"doccapture.resources\" = []  # MUTACIO",
+      "test": "tests.test_binary_artifacts"
     }
   ],
   "not_covered": [
@@ -294,6 +326,8 @@
     "DC-01a: a betutipus-lanc (DC-01b szelet -- ott harom kulonbozo hibaalak, ld. a tervet)",
     "DC-01a: a pypdfium2 5.x viselkedese es licenc-mezo alakja (a felso korlat epp ezt zarja ki)",
     "a rogzitett minta ELAVULASA: ha a valodi csomagok metaadat-alakja valtozik, azt semmi nem jelzi gepileg (ujra-rogzites: tools/capture_requirement_shapes.py --write)",
-    "a felhasznalo-azonosito kapu csak a `Users/` es `home/` alakot ismeri: egy mas alakú gep-azonosito (pl. UNC-utvonal, gepnev, felhasznalonev sajat konyvtar nelkul) ATMEGY -- kimondott korlat, nem lefedettseg"
+    "a felhasznalo-azonosito kapu csak a `Users/` es `home/` alakot ismeri: egy mas alakú gep-azonosito (pl. UNC-utvonal, gepnev, felhasznalonev sajat konyvtar nelkul) ATMEGY -- kimondott korlat, nem lefedettseg",
+    "a betutipus VIZUALIS minosege (hinting, kerning) -- csak a glyph-fedest merjuk",
+    "az OFL modositott-szarmazek atnevezesi kotelezettsege: ma NEM modositunk betutipust, tehat nincs mit merni (ha valaha igen, KAPUT igenyel)"
   ]
 }
