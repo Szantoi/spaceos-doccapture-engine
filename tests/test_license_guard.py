@@ -9,19 +9,29 @@ nélkülivé válik — GPL-függőséggel is lefordul és zöld a suite."*
 
 A LEGÉRTÉKESEBB TESZT EBBEN A FÁJLBAN
 -------------------------------------
-`test_a_kapu_ELBUKTAT_egy_VALODI_GPL_csomagot`: nem kitalált licenc-szöveget
-osztályoz, hanem egy **tényleg telepített** GPL-es csomagot deklarál egy eldobható
-`pyproject.toml`-ban, és megméri, hogy a kapu elbukik rajta. Egy szöveg-osztályozó
-teszt csak azt bizonyítja, hogy a *szabálylista* helyes; ez azt, hogy a **kapu
-össze is áll**.
+`test_a_kapu_ELBUKTAT_MINDEN_copyleft_licenc_alakot`: nem kitalált licenc-szöveget
+osztályoz, hanem **valódi csomagokból rögzített** metaadat-alakokat deklarál egy
+eldobható `pyproject.toml`-ban, és megméri, hogy a kapu elbukik rajtuk. Egy
+szöveg-osztályozó teszt csak azt bizonyítja, hogy a *szabálylista* helyes; ez
+azt, hogy a **kapu össze is áll**.
 
-⚠ Ha az a csomag egyszer eltűnik a környezetből, ez a teszt **kimondottan kimarad**
-(nem csendben zöldül) — a kihagyást a `measure_dependency_free.py` `KIHAGYVA`
-számlálója is kiírja.
+⚠ **A FÁJL KÉT MÉRÉSE KORÁBBAN A GÉPTŐL FÜGGÖTT, ÉS EMIATT VOLT PIROS A CI.**
+Mindkettő a fejlesztői gépen *véletlenül* telepített csomagokra épült:
+
+| Mérés | Amire épült | Tünete tiszta gépen |
+|---|---|---|
+| zárvány-bejárás | telepített `reportlab` | **bukás** (`hamis 'nem mertem'`) |
+| copyleft-elbuktatás | bármely telepített GPL-es csomag | **számolt kihagyás** |
+
+Mindkettő ugyanaz az osztály: *a kapu olyan gépen készült, ahol minden telepítve
+van.* A javítás is közös — a mintát **magunkkal visszük**
+(`tests/requirement_shapes.py`, valódi metaadatból gépileg rögzítve), így a
+mérés minden gépen ugyanazt méri.
 """
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import tempfile
@@ -34,20 +44,25 @@ sys.path.insert(0, str(REPO / "tools"))
 
 import license_guard as guard  # noqa: E402
 
+sys.path.insert(0, str(REPO / "tests"))
+
+import requirement_shapes as shapes  # noqa: E402
+
 CONFIG = REPO / "tools" / "licenses.json"
 
 
-def _installed_gpl_package() -> tuple[str, str] | None:
-    """Keres egy TÉNYLEG telepített, GPL-es csomagot — mérve, nem feltételezve."""
-    config = guard.json.loads(CONFIG.read_text(encoding="utf-8"))
-    for dist in metadata.distributions():
-        name = dist.metadata.get("Name")
-        if not name:
-            continue
-        text, _source = guard.license_of(dist)
-        if guard.classify(text, config) == "tiltott":
-            return guard.normalize(name), dist.version
-    return None
+def _license_specimen_sources() -> set[str]:
+    """A licenc-minták metaadat-mezőinek KULCSAI — melyik forrást fedik le.
+
+    A `license_of` három helyről olvas (`License-Expression` → `Classifier` →
+    `License`). Ha a minta-készlet csak egyet fedne, a visszalépési lánc többi
+    ága **mérés nélkül** maradna.
+    """
+    return {
+        key
+        for specimen in shapes.LICENSE_SPECIMENS.values()
+        for key, _value in specimen["mezok"]
+    }
 
 
 class SelfTestTests(unittest.TestCase):
@@ -171,10 +186,19 @@ class VersionFloorTests(unittest.TestCase):
 class EndToEndTests(unittest.TestCase):
     """A kapu ÖSSZEÁLL-e — eldobható repó-gyökéren mérve."""
 
-    def _run(self, pyproject: str) -> subprocess.CompletedProcess:
+    def _run(self, pyproject: str, specimen_path: Path | None = None) -> subprocess.CompletedProcess:
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         Path(tmp.name, "pyproject.toml").write_text(pyproject, encoding="utf-8")
+
+        # ⚠ A kapu ALPROCESSZBEN fut, tehat a hivo `sys.path`-jat NEM orokli --
+        # eppen ez a mechanizmus buktatta a CI-t (root-lelet, 5. ok). A minta
+        # ezert `PYTHONPATH`-on megy at, kimondva.
+        env = None
+        if specimen_path is not None:
+            env = dict(os.environ)
+            env["PYTHONPATH"] = str(specimen_path)
+
         return subprocess.run(
             [
                 sys.executable,
@@ -186,6 +210,7 @@ class EndToEndTests(unittest.TestCase):
             ],
             capture_output=True,
             text=True,
+            env=env,
         )
 
     def test_a_fuggoseg_NELKULI_projekt_KIMONDOTT_nulla_nem_zold_meres(self) -> None:
@@ -201,22 +226,46 @@ class EndToEndTests(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stdout)
         self.assertIn("TISZTA", proc.stdout)
 
-    @unittest.skipUnless(
-        _installed_gpl_package() is not None,
-        "nincs telepitett GPL-es csomag ebben a kornyezetben — a meres KIMARAD",
-    )
-    def test_a_kapu_ELBUKTAT_egy_VALODI_GPL_csomagot(self) -> None:
-        """Ez a fájl legértékesebb tesztje: nem kitalált szöveget osztályoz, hanem
-        egy **tényleg telepített** GPL-es csomagot deklarál, és megméri, hogy a
-        kapu elbukik rajta."""
-        name, version = _installed_gpl_package()  # type: ignore[misc]
-        proc = self._run(
-            f'[project]\nname = "proba"\nversion = "0.0.0"\ndependencies = ["{name}"]\n'
+    def test_a_kapu_ELBUKTAT_MINDEN_copyleft_licenc_alakot(self) -> None:
+        """Ez a fájl legértékesebb tesztje: nem kitalált licenc-szöveget osztályoz,
+        hanem **valódi csomagokból rögzített** metaadat-alakokat deklarál egy
+        eldobható `pyproject.toml`-ban, és megméri, hogy a kapu elbukik rajtuk.
+
+        ⚠ **Ez a teszt korábban `skipUnless`-szel kimaradt egy tiszta gépen.** A
+        fejlesztői gépen öt telepített copyleft csomag van, egy friss CI-n
+        **nulla** — a teszt tehát ott sosem futott, és mivel a mérési kör
+        `KIHAGYVA=0`-t követel, emiatt a kör **piros** volt. Ugyanaz a
+        környezet-függő vakság, mint a zárvány-mérésnél, csak a tünete nem bukás,
+        hanem számolt kihagyás.
+
+        A rögzített készlet egyben **erősebb** is az eredetinél: az azt vette,
+        amelyik először akadt a kezébe (nem determinisztikus, gépenként más), ez
+        viszont a `license_of` **mindhárom** forrás-mezőjét lefedi.
+        """
+        self.assertTrue(shapes.LICENSE_SPECIMENS, "nincs licenc-minta — a meres ures")
+
+        with shapes.installed_specimen() as specimen_path:
+            for name, specimen in shapes.LICENSE_SPECIMENS.items():
+                with self.subTest(minta=name):
+                    proc = self._run(
+                        f'[project]\nname = "proba"\nversion = "0.0.0"\n'
+                        f'dependencies = ["{name}"]\n',
+                        specimen_path=specimen_path,
+                    )
+                    self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+                    self.assertIn("TILTOTT LICENC", proc.stdout)
+                    self.assertIn(name, proc.stdout)
+                    self.assertIn(specimen["version"], proc.stdout)
+
+    def test_a_licenc_mintak_MINDHAROM_forras_mezot_fedik(self) -> None:
+        """Ha a készlet csak egy mezőt fedne, a visszalépési lánc többi ága
+        **mérés nélkül** maradna — és pont az a rész buktatna el egy valódi
+        csomagot, amelyiket senki nem méri."""
+        self.assertEqual(
+            _license_specimen_sources(),
+            {"License-Expression", "Classifier", "License"},
+            "a licenc-minta-keszlet nem fedi a `license_of` mindharom forrasat",
         )
-        self.assertEqual(proc.returncode, 1, proc.stdout)
-        self.assertIn("TILTOTT LICENC", proc.stdout)
-        self.assertIn(name, proc.stdout)
-        self.assertIn(version, proc.stdout)
 
     def test_a_NEM_TELEPITETT_fuggoseg_NEM_rendben(self) -> None:
         """Egy nem mért függőség nem 'rendben' — a hallgatás nem zöld."""
@@ -284,15 +333,92 @@ class RequirementMarkerTests(unittest.TestCase):
         self.assertFalse(guard._runtime_requirement("ez nem egy ervenyes requirement ==="))
 
     def test_a_ZARVANY_nem_hozza_be_a_dev_extrakat_MERVE(self) -> None:
-        """A javítás végponttól végpontig: a zárvány csak futásidejű csomagokat tart."""
-        found, missing = guard.transitive_closure({"reportlab"})
+        """A javítás végponttól végpontig, **környezet-független** mintán.
 
+        ⚠ Ez a teszt korábban a telepített `reportlab`-ot járta be. Az a
+        fejlesztői gépen megvan, a CI-n nincs — a CI 2026-07-31-én emiatt bukott.
+        Végigmérve: a motor teljes telepített láncán **nulla** extra-feltételű
+        követelmény van, tehát a CI-n **egyáltalán nincs alkalmas valódi minta**;
+        a mintát ezért magunkkal visszük (`tests/requirement_shapes.py`).
+        """
+        elvart = shapes.expected_closure()
+        tiltott = shapes.extra_only_names()
+
+        with shapes.installed_specimen():
+            found, missing = guard.transitive_closure({shapes.ROOT})
+
+        # 1) Az EREDETI hiba tunete: az extra-feltetelu nevek "nem mert"-kent
+        #    jelennenek meg, mert egyikuk sincs telepitve (77 hamis bejegyzes).
         self.assertEqual(missing, set(), f"hamis 'nem mertem' bejegyzesek: {sorted(missing)}")
-        for dev in ("flit", "sphinx", "pytest", "coverage", "check-manifest", "certifi"):
-            with self.subTest(dev=dev):
-                self.assertNotIn(dev, found, f"{dev} NEM szallitott fuggoseg")
-        self.assertIn("pillow", found, "a valodi futasideju fuggoseg kimaradt")
-        self.assertLess(len(found), 15, f"a zarvany tul nagy ({len(found)}) — a zaj visszatert")
+
+        # 2) A bejaras KOVETI a feltetel nelkuli elt -- enelkul egy "soha semmit
+        #    nem kovetek" bejaras is atmenne, es a kapu uresen zold lenne.
+        self.assertEqual(
+            set(found),
+            elvart,
+            "a zarvany nem a feltetel nelkuli eleken elerheto halmaz",
+        )
+
+        # 3) Egyetlen extra mogotti nev sem kerult be -- nevesitve, hogy a
+        #    bukas-uzenet megmondja, MELYIK szivargott at.
+        beszivargott = sorted(tiltott & set(found))
+        self.assertEqual(beszivargott, [], f"extra-feltetelu fuggoseg a zarvanyban: {beszivargott}")
+
+    def test_a_kihagyas_MELYSEG_2_ben_is_all(self) -> None:
+        """Az eredeti hiba a MÉLYEBB szinteken keletkezett, nem a gyökéren.
+
+        A minta közbenső csomagja (`dcfixture-imaging`) csupa extra-feltételű
+        követelményt hordoz — ha a bejárás csak a gyökéren szűrne, ezek itt
+        bejönnének.
+        """
+        kozbenso = shapes.PACKAGES["dcfixture-imaging"]["requires"]
+        self.assertTrue(kozbenso, "a melyseg-2 csomopont ures — a meres nem allit semmit")
+        self.assertTrue(
+            all("extra ==" in line for line in kozbenso),
+            "a melyseg-2 csomopontnak CSUPA extra-feltetelu sora kell legyen",
+        )
+
+        with shapes.installed_specimen():
+            found, _missing = guard.transitive_closure({shapes.ROOT})
+
+        self.assertIn("dcfixture-imaging", found, "a melyseg-2 csomopont el sem erheto")
+        for line in kozbenso:
+            nev = line.split(";")[0].strip().split(" ")[0]
+            with self.subTest(nev=nev):
+                self.assertNotIn(nev, found, "melyseg-2 extra szivargott be")
+
+    def test_a_MINTA_valoban_a_fixture_bol_jon_NEGATIV_kontroll(self) -> None:
+        """A minta-nevek a `sys.path`-bejegyzés NÉLKÜL nem oldhatók fel.
+
+        Enélkül nem tudnánk, hogy a fenti mérés a mintát járta-e be — vagy
+        véletlenül valami mást, ami a gépen amúgy is ott van.
+        """
+        _found, missing = guard.transitive_closure({shapes.ROOT})
+        self.assertEqual(
+            missing,
+            {shapes.ROOT},
+            "a minta a fixture NELKUL is feloldhato — a meres nem a mintat merte",
+        )
+
+    def test_a_DURVA_elvaras_szabaly_ervenyes_ezen_az_adaton(self) -> None:
+        """Az elvárás-oldal a `;` jelenlétéből dolgozik, a mért kód a markert
+        **kiértékeli** — a kettőnek külön kell tévednie. Ez a teszt méri, hogy a
+        durvább szabály ezen a rögzített adaton egybeesik a pontossal: minden
+        feltételes sor `extra ==` feltételt hordoz.
+
+        Egy tisztán környezeti marker (`; python_version >= "3.11"`) elrontaná az
+        elvárást — ezért mérjük, hogy ilyen nincs a mintában.
+        """
+        feltetelesek = [
+            line
+            for package in shapes.PACKAGES.values()
+            for line in package["requires"]
+            if ";" in line
+        ]
+        self.assertTrue(feltetelesek, "nincs feltetelE sor — az elvaras nem allit semmit")
+        for line in feltetelesek:
+            with self.subTest(line=line):
+                self.assertIn("extra ==", line, "tisztan kornyezeti marker a mintaban")
 
 
 class ScopeTests(unittest.TestCase):

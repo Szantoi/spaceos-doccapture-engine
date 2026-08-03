@@ -237,6 +237,30 @@
       "find": "    def validate(self) -> None:",
       "replace": "    def _mutacio(self):\n        return open('valami.bin', 'rb')  # MUTACIO\n\n    def validate(self) -> None:",
       "test": "tests.test_core_boundary"
+    },
+    {
+      "name": "licenc-kapu: a marker-kiertekeles MINDENT futasidejunek vesz (az EREDETI hiba)",
+      "asserts": "a zarvany-bejaras nem hozza be a dev/docs/test extrakat -- a mintat MAGUNKKAL visszuk, nem a gepen talalt csomagbol",
+      "file": "tools/license_guard.py",
+      "find": "    return bool(parsed.marker.evaluate({\"extra\": \"\"}))",
+      "replace": "    return True  # MUTACIO",
+      "test": "tests.test_license_guard"
+    },
+    {
+      "name": "licenc-kapu: a bejaras a FELTETEL NELKULI elt sem koveti (uresen zold irany)",
+      "asserts": "a zarvany-meres nem megy at egy 'soha semmit nem kovetek' bejarassal",
+      "file": "tools/license_guard.py",
+      "find": "    if parsed.marker is None:\n        return True",
+      "replace": "    if parsed.marker is None:\n        return False  # MUTACIO",
+      "test": "tests.test_license_guard"
+    },
+    {
+      "name": "licenc-kapu: a Classifier-forras kiesik a licenc-olvasasbol",
+      "asserts": "a licenc-minta-keszlet a `license_of` MINDHAROM forras-mezojet meri, nem csak az elsot",
+      "file": "tools/license_guard.py",
+      "find": "    if classifiers:",
+      "replace": "    if False:  # MUTACIO",
+      "test": "tests.test_license_guard"
     }
   ],
   "not_covered": [
@@ -252,6 +276,7 @@
     "DC-01a: elforgatott lap, vertikalis szoveg, RTL irasrend (egyik fixture sem fedi)",
     "DC-01a: valodi eles iraton mert hasab-talalati es hamis-riasztasi arany (csak kezzel irt fixture-ok)",
     "DC-01a: a betutipus-lanc (DC-01b szelet -- ott harom kulonbozo hibaalak, ld. a tervet)",
-    "DC-01a: a pypdfium2 5.x viselkedese es licenc-mezo alakja (a felso korlat epp ezt zarja ki)"
+    "DC-01a: a pypdfium2 5.x viselkedese es licenc-mezo alakja (a felso korlat epp ezt zarja ki)",
+    "a rogzitett minta ELAVULASA: ha a valodi csomagok metaadat-alakja valtozik, azt semmi nem jelzi gepileg (ujra-rogzites: tools/capture_requirement_shapes.py --write)"
   ]
 }

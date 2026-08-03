@@ -1,0 +1,161 @@
+{
+  "_megjegyzes": "GEPPEL ROGZITETT alakok valodi csomagokbol -- ne szerkeszd kezzel. Ujra-rogzites: python tools/capture_requirement_shapes.py --write",
+  "_atalakitas": "Minden csomag-NEV ele 'dcfixture-' elotag kerult (nevutkozes ellen). A marker-kifejezes, a verzio-korlat, a tagolas es a licenc-mezok erteke BETU SZERINT valtozatlan (a tobbsoros `License` mezo elso soraig).",
+  "_eredet": [
+    {
+      "forras_csomag": "reportlab",
+      "forras_verzio": "4.4.10",
+      "minta_nev": "dcfixture-root",
+      "szerep": "gyoker: 2 feltetel nelkuli + 6 extra-feltetelu kovetelmeny",
+      "kovetelmeny_sorok": 8
+    },
+    {
+      "forras_csomag": "pillow",
+      "forras_verzio": "10.4.0",
+      "minta_nev": "dcfixture-imaging",
+      "szerep": "melyseg-2: csupa extra-feltetelu, kozte OSSZETETT marker",
+      "kovetelmeny_sorok": 20
+    },
+    {
+      "forras_csomag": "charset-normalizer",
+      "forras_verzio": "3.4.6",
+      "minta_nev": "dcfixture-charset",
+      "szerep": "level: nincs egyetlen kovetelmenye sem",
+      "kovetelmeny_sorok": 0
+    },
+    {
+      "forras_csomag": "surya-ocr",
+      "forras_verzio": "0.17.1",
+      "minta_nev": "dcfixture-lic-surya-ocr",
+      "szerep": "License + Classifier egyutt (GPLv3)",
+      "licenc_mezok": 2
+    },
+    {
+      "forras_csomag": "pymupdf",
+      "forras_verzio": "1.28.0",
+      "minta_nev": "dcfixture-lic-pymupdf",
+      "szerep": "csak License, es az DUAL licenc -- a tiltas kell hogy nyerjen",
+      "licenc_mezok": 1
+    },
+    {
+      "forras_csomag": "semgrep",
+      "forras_verzio": "1.156.0",
+      "minta_nev": "dcfixture-lic-semgrep",
+      "szerep": "csak License-Expression (SPDX)",
+      "licenc_mezok": 1
+    },
+    {
+      "forras_csomag": "python-bidi",
+      "forras_verzio": "0.6.7",
+      "minta_nev": "dcfixture-lic-python-bidi",
+      "szerep": "csak Classifier",
+      "licenc_mezok": 1
+    },
+    {
+      "forras_csomag": "crc32c",
+      "forras_verzio": "2.8",
+      "minta_nev": "dcfixture-lic-crc32c",
+      "szerep": "License + Classifier egyutt (LGPLv2+)",
+      "licenc_mezok": 2
+    }
+  ],
+  "csomagok": {
+    "dcfixture-root": {
+      "version": "1.0.0",
+      "requires": [
+        "dcfixture-imaging>=9.0.0",
+        "dcfixture-charset",
+        "dcfixture-rl-accel<1.1,>=0.9.0; extra == \"accel\"",
+        "dcfixture-rl-renderpm<4.1,>=4.0.3; extra == \"renderpm\"",
+        "dcfixture-rlpycairo<1,>=0.2.0; extra == \"pycairo\"",
+        "dcfixture-freetype-py<2.4,>=2.3.0; extra == \"pycairo\"",
+        "dcfixture-rlbidi; extra == \"bidi\"",
+        "dcfixture-uharfbuzz; extra == \"shaping\""
+      ]
+    },
+    "dcfixture-imaging": {
+      "version": "1.0.0",
+      "requires": [
+        "dcfixture-furo ; extra == 'docs'",
+        "dcfixture-olefile ; extra == 'docs'",
+        "dcfixture-sphinx >=7.3 ; extra == 'docs'",
+        "dcfixture-sphinx-copybutton ; extra == 'docs'",
+        "dcfixture-sphinx-inline-tabs ; extra == 'docs'",
+        "dcfixture-sphinxext-opengraph ; extra == 'docs'",
+        "dcfixture-olefile ; extra == 'fpx'",
+        "dcfixture-olefile ; extra == 'mic'",
+        "dcfixture-check-manifest ; extra == 'tests'",
+        "dcfixture-coverage ; extra == 'tests'",
+        "dcfixture-defusedxml ; extra == 'tests'",
+        "dcfixture-markdown2 ; extra == 'tests'",
+        "dcfixture-olefile ; extra == 'tests'",
+        "dcfixture-packaging ; extra == 'tests'",
+        "dcfixture-pyroma ; extra == 'tests'",
+        "dcfixture-pytest ; extra == 'tests'",
+        "dcfixture-pytest-cov ; extra == 'tests'",
+        "dcfixture-pytest-timeout ; extra == 'tests'",
+        "dcfixture-typing-extensions ; (python_version < \"3.10\") and extra == 'typing'",
+        "dcfixture-defusedxml ; extra == 'xmp'"
+      ]
+    },
+    "dcfixture-charset": {
+      "version": "1.0.0",
+      "requires": []
+    }
+  },
+  "licenc_mintak": {
+    "dcfixture-lic-surya-ocr": {
+      "version": "0.17.1",
+      "mezok": [
+        [
+          "Classifier",
+          "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)"
+        ],
+        [
+          "License",
+          "GPL-3.0-or-later"
+        ]
+      ]
+    },
+    "dcfixture-lic-pymupdf": {
+      "version": "1.28.0",
+      "mezok": [
+        [
+          "License",
+          "Dual Licensed - GNU AFFERO GPL 3.0 or Artifex Commercial License"
+        ]
+      ]
+    },
+    "dcfixture-lic-semgrep": {
+      "version": "1.156.0",
+      "mezok": [
+        [
+          "License-Expression",
+          "LGPL-2.1-or-later"
+        ]
+      ]
+    },
+    "dcfixture-lic-python-bidi": {
+      "version": "0.6.7",
+      "mezok": [
+        [
+          "Classifier",
+          "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)"
+        ]
+      ]
+    },
+    "dcfixture-lic-crc32c": {
+      "version": "2.8",
+      "mezok": [
+        [
+          "Classifier",
+          "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)"
+        ],
+        [
+          "License",
+          "LGPL-2.1-or-later"
+        ]
+      ]
+    }
+  }
+}
