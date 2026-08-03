@@ -38,6 +38,24 @@ def _python_files() -> list[Path]:
     return files
 
 
+# A repoban PUBLIKALT szovegfajlok. A `.py` szandekosan benne van: a
+# felhasznalo-azonosito ut ott is szivargas, nem csak dokumentacioban.
+PUBLISHED_SUFFIXES = {".py", ".md", ".json", ".toml", ".yaml", ".yml", ".cfg", ".txt"}
+SKIPPED_PARTS = {".git", "__pycache__", ".venv", "venv", "node_modules", ".mypy_cache"}
+
+
+def _published_text_files() -> list[Path]:
+    """Minden publikált szövegfájl a repóban — nem csak a `src/tests/tools` `.py`-jai."""
+    files: list[Path] = []
+    for path in sorted(REPO.rglob("*")):
+        if not path.is_file() or path.suffix not in PUBLISHED_SUFFIXES:
+            continue
+        if any(part in SKIPPED_PARTS for part in path.parts):
+            continue
+        files.append(path)
+    return files
+
+
 def _is_confusable(ch: str) -> bool:
     if ord(ch) < 128:
         return False
@@ -197,6 +215,168 @@ class NoAbsolutePathTests(unittest.TestCase):
         for rel in self.ALLOWED:
             with self.subTest(rel=rel):
                 self.assertTrue((REPO / rel).is_file(), "elavult kivetel: " + rel)
+
+
+class NoUserIdentifyingPathTests(unittest.TestCase):
+    """FELHASZNÁLÓ-AZONOSÍTÓ útvonal — bárhol, bármilyen elválasztóval.
+
+    ⚠ **Ezt a kaput egy MÉRT rés hozta létre, a DC-01b előmunkálataként.** A
+    `NoAbsolutePathTests` (fentebb) a saját indoklása szerint azért létezik, mert
+    *„a repó PUBLIKUS"* — de **csak `*.py`-t olvas**, és **idézőjelet követel** a
+    minta elé. A DC-01 terve azt írta, hogy a betűtípus-proveniencia `.md`-be
+    írása „megbuktatná" ezt a kaput; **megmérve az állítás nem áll** — a kapu a
+    `.md`-t **el sem olvassa**. A terv aggálya tehát nem ütközés volt, hanem
+    **rés**, csak rossz helyen keresve.
+
+    Három vakfolt, mérve — és mindhármat pont a font-dokumentáció alakja találja el:
+
+    | alak | a régi minta |
+    |---|---|
+    | `font = "C:/Windows/Fonts/arial.ttf"` (idézőjel) | fog |
+    | `` `C:\\Users\\valaki\\f.txt` `` (backtick — a markdown írásmódja) | **NEM fog** |
+    | `/usr/share/fonts/...` (nincs az előtag-listán) | **NEM fog** |
+    | csupasz út elválasztó nélkül | **NEM fog** |
+
+    Vagyis pusztán a fájlkör bővítése **üresen zöld** kaput adott volna: 0 találat,
+    miközben a valódi szivárgás-alak átmegy.
+
+    MIT MÉR EZ A KAPU, ÉS MIT SZÁNDÉKOSAN NEM
+    -----------------------------------------
+    A kérdés nem az, hogy „abszolút-e az út", hanem hogy **elárul-e valamit egy
+    konkrét gépről vagy emberről**:
+
+    - `C:/Users/<valaki>/...`, `/home/<valaki>/...` → **szivárgás**, tiltott;
+    - `C:/Windows/Fonts/arial.ttf`, `/usr/share/fonts/...` → **nem szivárgás**:
+      minden gépen ugyanaz, semmit nem árul el. És a **betűtípus-politikának
+      dokumentálnia KELL** őket (melyik rendszer-font EULA-s) — egy kapu, ami ezt
+      tiltaná, a helyes dokumentációt akadályozná.
+
+    ⚠ Ez a kapu **nem gyengíti** a `NoAbsolutePathTests`-t: az változatlanul
+    szigorú marad a `.py`-kra (kódban abszolút út mindig hiba, ld. QUALITY §3).
+    Ez a réteg **hozzáad**: más fájlkört és más elválasztó-készletet mér.
+    """
+
+    # Elvalaszto-FUGGETLEN: nincs benne idezojel-kikotes, mert a markdown
+    # backtickkel ir utat, a tablazat-cellak pedig sehogy.
+    PATTERN = re.compile(r"(?:[A-Za-z]:[\\/])?(?:Users|home)[\\/]([A-Za-z0-9_.-]+)")
+
+    # Ugyanaz a kivetel-lista, mint a `NoAbsolutePathTests`-nel, ugyanabbol az
+    # okbol: ezek a fajlok SZANDEKOSAN tartalmaznak pelda-utakat a kapuk
+    # meresehez. A letezesuket kulon teszt meri -- egy elavult kivetel csendben
+    # kihagyna egy fajlt.
+    #
+    # ⚠ A `tools/mutations.json` **a sajat kapu-epites kozben** kerult ide, es a
+    # tanulsag altalanos: a mutacios config LITERALIS proba-ertekeket tart, tehat
+    # egy szivargas-kaput dokumentalo fajl maga is **uj talalatot gyart**. Nem
+    # blanketta-kivetelt adtunk neki, hanem SZUKEBB szabalyt: ott csak ismert
+    # helyorzo-nev allhat (ld. `test_a_mutacios_config_csak_HELYORZO_nevet_tarthat`).
+    ALLOWED = (
+        "tests/test_observability.py",
+        "tests/test_source_hygiene.py",
+        "tools/mutations.json",
+    )
+
+    # A repo bevalt helyorzoi. Egy VALODI felhasznalonev ezek kozott nem szerepel,
+    # tehat a szukebb szabaly a kivetelezett fajlban is fog.
+    PROBE_NAMES = frozenset({"valaki"})
+
+    def test_nincs_felhasznalo_azonosito_ut_egyetlen_publikalt_fajlban_sem(self) -> None:
+        offenders: list[str] = []
+        for path in _published_text_files():
+            rel = path.relative_to(REPO).as_posix()
+            if rel in self.ALLOWED:
+                continue
+            for lineno, line in enumerate(path.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
+                match = self.PATTERN.search(line)
+                if match:
+                    offenders.append(f"{rel}:{lineno} (felhasznalo-nev: {match.group(1)!r})")
+        self.assertEqual(
+            offenders,
+            [],
+            "felhasznalo-azonosito utvonal egy PUBLIKUS repoban: " + "; ".join(offenders),
+        )
+
+    def test_a_kapu_HARAP_MINDEN_elvalaszto_alakon(self) -> None:
+        """A három vakfolt, amit a régi minta átengedett — most mind fogni kell."""
+        user_win = "C:" + chr(92) + "Users" + chr(92) + "gabor" + chr(92) + "f.txt"
+        minta = [
+            ("idezojeles", "p = " + chr(34) + "C:/Users/gabor/f.txt" + chr(34)),
+            ("BACKTICKES (markdown)", "forras: `" + user_win + "`"),
+            ("tablazat-cella", "| `" + user_win + "` | EULA |"),
+            ("csupasz, elvalaszto nelkul", "A fajl itt van: /home/gabor/adat.csv"),
+            ("md-link", "[a fajl](file:///home/gabor/adat.csv)"),
+        ]
+        for nev, sor in minta:
+            with self.subTest(alak=nev):
+                self.assertTrue(self.PATTERN.search(sor), "nem fog: " + nev)
+
+    def test_a_kapu_ATENGEDI_az_altalanos_RENDSZER_utat(self) -> None:
+        """A másik irány, és ez a **termék** szempontjából fontos.
+
+        A betűtípus-politikának ki kell mondania, melyik rendszer-font EULA-s és
+        melyik szabad. Ezek az utak **minden gépen ugyanazok**, tehát semmit nem
+        árulnak el — egy mindig-piros kapu itt a helyes dokumentációt tiltaná be.
+        """
+        minta = [
+            "| `C:" + chr(92) + "Windows" + chr(92) + "Fonts" + chr(92) + "arial.ttf` | Monotype EULA |",
+            "forras: `/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf`",
+            "a rendszer font-mappaja: C:/Windows/Fonts/",
+            "beagyazott betutipus: fonts/LiberationSans-Regular.ttf",
+        ]
+        for sor in minta:
+            with self.subTest(sor=sor):
+                self.assertIsNone(self.PATTERN.search(sor), "hamis pozitiv: " + sor)
+
+    def test_a_meres_a_MARKDOWN_fajlokra_IS_kiterjed(self) -> None:
+        """⚠ Enélkül a kapu **üresen zöld** lenne: a régi réteg csak `*.py`-t
+        olvasott, és pont a `.md` a hely, ahova a proveniencia kerül."""
+        suffixes = {path.suffix for path in _published_text_files()}
+        for kell in (".md", ".py", ".json"):
+            with self.subTest(suffix=kell):
+                self.assertIn(kell, suffixes, f"a meres NEM olvas {kell} fajlt")
+
+        # A README minden repoban van -- ha a bejaro nem talalja meg, a
+        # "0 talalat" a bejarasrol szol, nem a repo tisztasagarol.
+        nevek = {path.name for path in _published_text_files()}
+        self.assertIn("README.md", nevek, "a bejaro a README.md-t sem latja")
+
+    def test_a_kivetel_lista_MINDEN_eleme_letezik(self) -> None:
+        """Egy elavult kivétel csendben kihagyna egy fájlt a mérésből."""
+        for rel in self.ALLOWED:
+            with self.subTest(rel=rel):
+                self.assertTrue((REPO / rel).is_file(), "elavult kivetel: " + rel)
+
+    def test_a_mutacios_config_csak_HELYORZO_nevet_tarthat(self) -> None:
+        """A kivétel **nem blanketta** — a mutációs config szigorúbb szabály alá esik.
+
+        ⚠ Ez a teszt egy **saját, mért hibából** született: a két új
+        higiénia-mutáció felvételekor a `tools/mutations.json`-ba valódi
+        alakú próba-utak kerültek, és **a saját kapum buktatta el a saját
+        alapállapotát** (`ERVENYTELEN` mérés, „az alapallapot mar piros").
+
+        Egy szivárgás-kaput dokumentáló fájl **maga is új találatot gyárt** — a
+        helyes válasz nem a kapu tágítása és nem is blanketta-kivétel, hanem
+        **szűkebb szabály**: itt csak ismert helyőrző-név állhat.
+        """
+        path = REPO / "tools" / "mutations.json"
+        rossz: list[str] = []
+        for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            for match in self.PATTERN.finditer(line):
+                if match.group(1) not in self.PROBE_NAMES:
+                    rossz.append(f"tools/mutations.json:{lineno} -> {match.group(1)!r}")
+        self.assertEqual(
+            rossz,
+            [],
+            "NEM helyorzo nev a mutacios configban (a kivetel nem blanketta): "
+            + "; ".join(rossz),
+        )
+
+    def test_a_SZUKEBB_szabaly_HARAP_negativ_kontroll(self) -> None:
+        """A szűkebb szabály fogna egy valódi felhasználónevet is."""
+        sor = "  " + chr(34) + "replace" + chr(34) + ": " + chr(34) + "C:/Users/szanto/x" + chr(34)
+        talalat = [m.group(1) for m in self.PATTERN.finditer(sor)]
+        self.assertEqual(talalat, ["szanto"])
+        self.assertNotIn("szanto", self.PROBE_NAMES, "a negativ kontroll nem allit semmit")
 
 
 if __name__ == "__main__":

@@ -261,6 +261,22 @@
       "find": "    if classifiers:",
       "replace": "    if False:  # MUTACIO",
       "test": "tests.test_license_guard"
+    },
+    {
+      "name": "higienia: BACKTICKES felhasznalo-ut egy MARKDOWN fajlban",
+      "asserts": "a szivargas-kapu a .md-t IS olvassa, es NEM kovetel idezojelet (a markdown backtickkel ir utat) -- a regi reteg mindket okbol vak volt",
+      "file": "README.md",
+      "find": "# spaceos-doccapture-engine",
+      "replace": "# spaceos-doccapture-engine\n\nA fejlesztoi peldany: `C:\\Users\\valaki\\engine`  <!-- MUTACIO -->",
+      "test": "tests.test_source_hygiene"
+    },
+    {
+      "name": "higienia: CSUPASZ felhasznalo-ut egy TOML fajlban",
+      "asserts": "a kapu a .toml-t is olvassa, es az elvalaszto NELKULI alakot is fogja",
+      "file": "pyproject.toml",
+      "find": "dependencies = []",
+      "replace": "# forras: /home/valaki/motor  # MUTACIO\ndependencies = []",
+      "test": "tests.test_source_hygiene"
     }
   ],
   "not_covered": [
@@ -277,6 +293,7 @@
     "DC-01a: valodi eles iraton mert hasab-talalati es hamis-riasztasi arany (csak kezzel irt fixture-ok)",
     "DC-01a: a betutipus-lanc (DC-01b szelet -- ott harom kulonbozo hibaalak, ld. a tervet)",
     "DC-01a: a pypdfium2 5.x viselkedese es licenc-mezo alakja (a felso korlat epp ezt zarja ki)",
-    "a rogzitett minta ELAVULASA: ha a valodi csomagok metaadat-alakja valtozik, azt semmi nem jelzi gepileg (ujra-rogzites: tools/capture_requirement_shapes.py --write)"
+    "a rogzitett minta ELAVULASA: ha a valodi csomagok metaadat-alakja valtozik, azt semmi nem jelzi gepileg (ujra-rogzites: tools/capture_requirement_shapes.py --write)",
+    "a felhasznalo-azonosito kapu csak a `Users/` es `home/` alakot ismeri: egy mas alakú gep-azonosito (pl. UNC-utvonal, gepnev, felhasznalonev sajat konyvtar nelkul) ATMEGY -- kimondott korlat, nem lefedettseg"
   ]
 }
